@@ -58,6 +58,7 @@ class AgentState(TypedDict):
     # Router outputs
     intent:        str            # "lookup" | "generative"
     query_type:    str            # "factual" | "cross_modal" | "multi_hop" | "conversational"
+    image_paths: list[str]        # list of image paths
     memory_lookup: bool
     memory_write:  bool
 
@@ -163,7 +164,7 @@ app = build_graph()
 # Public entry point
 # ---------------------------------------------------------------------------
 
-def run_query(query: str, session_memory: dict | None = None) -> dict:
+def run_query(query: str, session_memory: dict | None = None, image_paths: list[str] | None = None) -> dict:
     """
     Run a single query through the agent.
 
@@ -177,6 +178,7 @@ def run_query(query: str, session_memory: dict | None = None) -> dict:
     """
     initial: AgentState = {
         "query":             query,
+        "image_paths":       image_paths or [],
         "messages":          [HumanMessage(content=query)],
         "intent":            "lookup",
         "query_type":        "",

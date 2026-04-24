@@ -21,7 +21,8 @@ Node pipeline:
 Intent types
 ------------
   lookup     : answer lives directly in the data (factual, cross-modal)
-               e.g. "how much did I spend in Tokyo", "show me photos from Berlin"
+               e.g. "how much did I spend in Tokyo", "when did I visit Berlin",
+               "show me photos from my Japan trip", "what restaurants did I go to"
                -> analyser extracts the fact -> direct_responder returns it
 
   generative : answer requires reasoning BEYOND the data to produce something new
@@ -31,20 +32,28 @@ Intent types
 
 The router classifies intent; the analyser does the heavy reasoning;
 the responders are thin formatters focused on their specific output style.
+
+Image handling
+--------------
+  When image_paths are present in state, nodes that need visual context (_query_router,
+  analyser) use _vlm (a vision-language model) instead of _llm.
+  _encode_images() converts local file paths to base64 image_url content blocks
+  compatible with the Groq vision API.
 """
 
 from __future__ import annotations
 
+import base64
 import json
 import logging
 import os
 import re
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
-import os
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 
@@ -75,6 +84,7 @@ def _ts(label: str) -> None:
     """Emit a timestamped step marker."""
     log.info(f"{label}")
 
+
 # ---------------------------------------------------------------------------
 # Ablation controls
 # ---------------------------------------------------------------------------
@@ -84,11 +94,60 @@ ENABLE_TEMPORAL_CORRELATION: bool = True
 TRIP_WINDOW_GAP_DAYS: int = 3
 
 # ---------------------------------------------------------------------------
-# LLM instances
+# LLM / VLM instances
 # ---------------------------------------------------------------------------
 
-_GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
-_llm = ChatGroq(model=_GROQ_MODEL, temperature=0, api_key=os.getenv("GROQ_API_KEY"))
+_GROQ_MODEL     = os.getenv("GROQ_MODEL",     "llama-3.3-70b-versatile")
+_GROQ_VLM_MODEL = os.getenv("GROQ_VLM_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct")
+
+_llm = ChatGroq(model=_GROQ_MODEL,     temperature=0, api_key=os.getenv("GROQ_API_KEY"))
+_vlm = ChatGroq(model=_GROQ_VLM_MODEL, temperature=0, api_key=os.getenv("GROQ_API_KEY"))
+
+# ---------------------------------------------------------------------------
+# Image encoding helper
+# ---------------------------------------------------------------------------
+
+_SUPPORTED_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+
+
+def _encode_images(image_paths: list[str]) -> list[dict]:
+    """
+    Encode local image files as base64 image_url content blocks for the Groq
+    vision API.  Unsupported extensions and missing files are skipped with a
+    warning so a bad path never crashes the pipeline.
+
+    Returns a list of dicts:
+        [{"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,..."}}]
+    """
+    blocks = []
+    for path in image_paths:
+        p = Path(path)
+        if not p.exists():
+            log.warning(f"[nodes] Image not found, skipping: {path}")
+            continue
+        if p.suffix.lower() not in _SUPPORTED_IMAGE_EXTS:
+            log.warning(f"[nodes] Unsupported image extension, skipping: {path}")
+            continue
+        ext  = p.suffix.lower().lstrip(".")
+        mime = "jpeg" if ext == "jpg" else ext
+        data = base64.b64encode(p.read_bytes()).decode("utf-8")
+        blocks.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:image/{mime};base64,{data}"},
+        })
+        log.info(f"[nodes] Encoded image: {p.name} ({p.stat().st_size // 1024} KB)")
+    return blocks
+
+
+def _build_user_content(text: str, image_blocks: list[dict]) -> list[dict] | str:
+    """
+    Return a multimodal content list when image_blocks are present,
+    or a plain string when there are none (keeps non-vision calls clean).
+    """
+    if not image_blocks:
+        return text
+    return [{"type": "text", "text": text}] + image_blocks
+
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -108,8 +167,6 @@ _PREFERENCE_SIGNALS = {
     "don't like", "i like", "i want", "my preference", "hostel", "hotel",
 }
 
-# Keywords that hard-classify a query as generative regardless of LLM output.
-# Small models frequently misclassify recommendation queries as "lookup".
 _GENERATIVE_SIGNALS = {
     "recommend", "recommendation", "suggest", "suggestion",
     "where should i", "where to go", "where to travel", "where to visit",
@@ -245,8 +302,6 @@ def _windows_to_context(windows: list[dict], undated: list[dict]) -> str:
             f"({w['days']} day{'s' if w['days'] != 1 else ''}) ==="
         )
 
-        # Interleave transactions and photos sorted by date so the analyser
-        # sees them in chronological order and can spot same-day pairs
         dated_records = []
         for doc in w["transactions"]:
             dt = _extract_date(doc)
@@ -281,6 +336,7 @@ def _windows_to_context(windows: list[dict], undated: list[dict]) -> str:
             lines.append(f"  [{src}] {doc.get('document', '')[:150]}")
     return "\n".join(lines)
 
+
 # ---------------------------------------------------------------------------
 # Node 1 -- Query Router
 # ---------------------------------------------------------------------------
@@ -304,6 +360,9 @@ Also classify query_type (for retrieval planning):
   "multi_hop"      - combines multiple evidence sources
   "conversational" - references preferences or earlier turns
 
+If one or more images are attached to this message, treat them as additional query
+context. A query with images is almost always "cross_modal" or "factual".
+
 And memory flags:
   memory_lookup = true  when stored preferences help answer
   memory_write  = true  ONLY when query explicitly states a NEW personal preference
@@ -320,9 +379,19 @@ Respond with ONLY valid JSON:
 def query_router(state: dict) -> dict:
     """Classify intent and query type, set routing flags."""
     _ts("query_router: start")
-    response = _llm.invoke([
+
+    image_paths   = state.get("image_paths", [])
+    image_blocks  = _encode_images(image_paths)
+    model         = _vlm if image_blocks else _llm
+
+    user_content  = _build_user_content(state["query"], image_blocks)
+
+    if image_blocks:
+        log.info(f"[router] {len(image_blocks)} image(s) attached — using VLM ({_GROQ_VLM_MODEL})")
+
+    response   = model.invoke([
         SystemMessage(content=_ROUTER_SYSTEM),
-        HumanMessage(content=state["query"]),
+        HumanMessage(content=user_content),
     ])
     parsed     = _parse_json(response.content)
     intent     = parsed.get("intent", "lookup")
@@ -336,10 +405,13 @@ def query_router(state: dict) -> dict:
         mem_write = any(kw in state["query"].lower() for kw in _PREFERENCE_SIGNALS)
 
     # Hard override: if query contains generative keywords, force intent=generative
-    # Small models frequently misclassify recommendation queries as "lookup"
     q_lower = state["query"].lower()
     if any(kw in q_lower for kw in _GENERATIVE_SIGNALS):
         intent = "generative"
+
+    # If images are attached and no generative signal, lean toward cross_modal
+    if image_blocks and query_type not in ("cross_modal", "multi_hop"):
+        query_type = "cross_modal"
 
     log.info(f"[router] intent={intent}  query_type={query_type}  memory_lookup={mem_lookup}  memory_write={mem_write}")
     _ts(f"query_router: done  (intent={intent}  type={query_type})")
@@ -455,10 +527,17 @@ Query: recommend somewhere new to travel [intent=generative]
 
 Respond ONLY with valid JSON:"""
 
+
 def retrieval_planner(state: dict) -> dict:
     """Decompose the query into sub-queries and select retrieval parameters."""
     _ts("retrieval_planner: start")
     memory_str = json.dumps(state.get("memory", {})) if state.get("memory") else "{}"
+
+    # If images were provided, note that to the planner so it biases toward "full"
+    image_note = ""
+    if state.get("image_paths"):
+        n = len(state["image_paths"])
+        image_note = f"\nNote: the user also provided {n} image file(s) directly. Bias retrieval_mode toward 'full' and include photo scene sub-queries.\n"
 
     response = _llm.invoke([
         SystemMessage(content=_PLANNER_SYSTEM),
@@ -466,6 +545,7 @@ def retrieval_planner(state: dict) -> dict:
             f"Intent: {state.get('intent', 'lookup')}\n"
             f"Query type: {state.get('query_type', 'factual')}\n"
             f"User preferences: {memory_str}\n"
+            f"{image_note}"
             f"Query: {state['query']}"
         )),
     ])
@@ -493,8 +573,6 @@ def retrieval_planner(state: dict) -> dict:
     if image_filter:
         image_filter = {k: v for k, v in image_filter.items() if k in _VALID_FILTER_KEYS} or None
 
-    # Generative queries need broad evidence — enforce minimum 3 sub-queries
-    # so the analyser has enough signal about past trips, costs, and style
     if state.get("intent") == "generative" and len(sub_queries) < 3:
         log.info("[planner] generative query with too few sub-queries — expanding")
         base = sub_queries[0] if sub_queries else state["query"]
@@ -555,9 +633,6 @@ def tool_executor(state: dict) -> dict:
         for r in results:
             accumulated[r["id"]] = r
 
-    # Safety net: if no photo_caption docs came back, run a dedicated caption pass.
-    # This ensures the temporal correlator always has photo evidence to fuse with
-    # transactions, even when the planner sub-queries didn't surface any.
     all_docs = list(accumulated.values())
     photo_count = sum(
         1 for d in all_docs
@@ -589,8 +664,9 @@ def tool_executor(state: dict) -> dict:
         "tool_calls":       tool_trace,
     }
 
+
 # ---------------------------------------------------------------------------
-# Rule-based category inference (agent-side, no chunker changes needed)
+# Rule-based category inference
 # ---------------------------------------------------------------------------
 
 _CATEGORY_RULES: list[tuple[str, list[str]]] = [
@@ -650,16 +726,12 @@ _CATEGORY_RULES: list[tuple[str, list[str]]] = [
 
 
 def _rule_infer_category(payee: str, description: str, address: str = "") -> str:
-    """
-    Rule-based category inference from payee, description, and address text.
-    Case-insensitive substring match. First matching rule wins.
-    Returns empty string if no rule matches.
-    """
     haystack = " ".join([payee, description, address]).lower()
     for category, keywords in _CATEGORY_RULES:
         if any(kw in haystack for kw in keywords):
             return category
     return ""
+
 
 # ---------------------------------------------------------------------------
 # Node 4b -- Transaction Enricher
@@ -677,11 +749,7 @@ Your job: infer the most specific activity label possible.
 Rules:
   - If a photo caption describes an activity that plausibly matches the transaction
     payee/amount, use that activity as the label
-    (e.g. payee="food stall" + photo "crowded night market with noodle stalls"
-    → "street food at night market")
   - If a map save matches the payee name or area, use the place type to refine
-    (e.g. payee="The Arches" + map save "The Arches Bar & Grill [restaurant]"
-    → "dinner at The Arches")
   - If no cross-modal evidence exists, infer from payee and description text alone
   - Never invent specifics not supported by the evidence
   - Keep labels concise: 3-8 words
@@ -692,10 +760,10 @@ Respond with ONLY a JSON array, one object per transaction:
 
 def transaction_enricher(state: dict) -> dict:
     """
-    Enrich transaction records with inferred activity labels by:
-      1. Rule-based inference from payee/description/address text (fast, no LLM)
-      2. LLM inference for remaining ambiguous transactions, cross-referencing
-         same-day photos and map saves to determine what the user was actually doing
+    Enrich transaction records with inferred activity labels:
+      1. Rule-based inference from payee/description/address (fast, no LLM)
+      2. LLM inference for ambiguous transactions cross-referencing same-day
+         photos and map saves
     """
     _ts("transaction_enricher: start")
     docs = state.get("retrieved_docs", [])
@@ -717,16 +785,17 @@ def transaction_enricher(state: dict) -> dict:
             "tool_calls": state.get("tool_calls", []) + ["transaction_enricher(no_txns)"],
         }
 
-    # ── Pass 1: rule-based inference ────────────────────────────────────────
+    # ── Pass 1: rule-based ────────────────────────────────────────
     rule_enriched = 0
     for txn in transactions:
         meta = txn.get("metadata", {})
         if meta.get("inferred_activity"):
-            continue  # already enriched upstream
-        payee       = meta.get("payee", "")
-        description = meta.get("description", "")
-        address     = meta.get("address", "")
-        inferred    = _rule_infer_category(payee, description, address)
+            continue
+        inferred = _rule_infer_category(
+            meta.get("payee", ""),
+            meta.get("description", ""),
+            meta.get("address", ""),
+        )
         if inferred:
             meta["inferred_activity"] = inferred
             txn["document"] = txn.get("document", "") + f" [activity: {inferred}]"
@@ -734,7 +803,7 @@ def transaction_enricher(state: dict) -> dict:
 
     log.info(f"[transaction_enricher] rule-based: {rule_enriched}/{len(transactions)} categorised")
 
-    # ── Pass 2: LLM inference for ambiguous transactions with photo evidence ─
+    # ── Pass 2: LLM inference ─────────────────────────────────────
     def _date_key(doc: dict) -> str:
         dt = _extract_date(doc)
         return dt.date().isoformat() if dt else "unknown"
@@ -746,15 +815,11 @@ def transaction_enricher(state: dict) -> dict:
     for m in map_saves:
         map_by_date.setdefault(_date_key(m), []).append(m)
 
-    # Send to LLM if: still no category OR same-day photos exist that could
-    # refine a coarse rule-based label into something more specific
     to_enrich_llm = []
     for txn in transactions:
         meta     = txn.get("metadata", {})
         txn_date = _date_key(txn)
-        has_photos = bool(
-            photos_by_date.get(txn_date) or photos_by_date.get("unknown")
-        )
+        has_photos      = bool(photos_by_date.get(txn_date) or photos_by_date.get("unknown"))
         already_specific = bool(meta.get("inferred_activity")) and not has_photos
         if not already_specific:
             to_enrich_llm.append(txn)
@@ -765,22 +830,20 @@ def transaction_enricher(state: dict) -> dict:
         for txn in to_enrich_llm[:20]:
             meta     = txn.get("metadata", {})
             txn_date = _date_key(txn)
-
             same_day_photos = (
                 photos_by_date.get(txn_date, []) +
                 photos_by_date.get("unknown", [])
             )[:4]
             same_day_maps = map_by_date.get(txn_date, [])[:3]
-
             txn_blocks.append({
-                "id":              txn["id"],
-                "date":            txn_date,
-                "payee":           meta.get("payee", ""),
-                "description":     meta.get("description", ""),
-                "amount":          meta.get("amount", ""),
+                "id":               txn["id"],
+                "date":             txn_date,
+                "payee":            meta.get("payee", ""),
+                "description":      meta.get("description", ""),
+                "amount":           meta.get("amount", ""),
                 "current_category": meta.get("inferred_activity") or meta.get("category", ""),
-                "photos_same_day": [p.get("document", "")[:150] for p in same_day_photos],
-                "map_saves":       [m.get("document", "")[:100] for m in same_day_maps],
+                "photos_same_day":  [p.get("document", "")[:150] for p in same_day_photos],
+                "map_saves":        [m.get("document", "")[:100] for m in same_day_maps],
             })
 
         try:
@@ -795,15 +858,12 @@ def transaction_enricher(state: dict) -> dict:
                     activity = item.get("inferred_activity", "").strip()
                     if not txn_id or not activity:
                         continue
-                    # Find and update the matching doc in the full docs list
                     for doc in docs:
                         if doc["id"] == txn_id:
                             doc["metadata"]["inferred_activity"] = activity
-                            # Avoid duplicating the tag if rule already added one
-                            if f"[activity:" not in doc.get("document", ""):
+                            if "[activity:" not in doc.get("document", ""):
                                 doc["document"] = doc.get("document", "") + f" [activity: {activity}]"
                             else:
-                                # Replace the coarse rule label with the refined LLM label
                                 doc["document"] = re.sub(
                                     r"\[activity:[^\]]*\]",
                                     f"[activity: {activity}]",
@@ -822,6 +882,7 @@ def transaction_enricher(state: dict) -> dict:
             f"transaction_enricher(rule={rule_enriched}, llm={llm_enriched})"
         ],
     }
+
 
 # ---------------------------------------------------------------------------
 # Node 5 -- Temporal Correlator
@@ -883,27 +944,25 @@ The evidence arrives grouped into TRIP WINDOWS — clusters of records that shar
 overlapping dates (within a few days of each other). Your job is to fuse all three
 sources within each window to reconstruct what actually happened.
 
+If one or more images are directly attached to this message, treat them as
+additional first-hand photo evidence. Describe what you see in each image and
+incorporate it into the analysis alongside the retrieved documents.
+
 FUSION RULES:
 0. Check for pre-enriched activity labels — transactions may already carry an
-   'inferred_activity' field derived from same-day photo and map evidence. If
-   present, use it as the primary activity description rather than re-deriving it.
+   'inferred_activity' field. If present, use it as the primary activity description.
 1. Anchor to dates — if a photo and a transaction share the same date or are within
-   1 day of each other, treat them as the SAME activity unless the content contradicts it.
-2. Photos reveal the activity — a transaction labelled "restaurant" + a photo of a
-   street food stall on the same day = the user ate at a street food stall, not a
-   sit-down restaurant. Always let the photo description refine the transaction label.
-3. Map saves provide intent and context — a saved place near a transaction location
-   confirms what the user was planning to do. A highly-rated restaurant save + food
-   transaction nearby = deliberate dining choice, not incidental spending.
-4. When no transaction matches a photo — the photo still tells you what the user did
-   for free (sightseeing, hiking, beach, walking). Note these as zero-cost activities.
+   1 day of each other, treat them as the SAME activity unless content contradicts it.
+2. Photos reveal the activity — always let the photo description refine the transaction label.
+3. Map saves provide intent and context.
+4. When no transaction matches a photo — note these as zero-cost activities.
 5. When no photo matches a transaction — describe the transaction category only.
    Do not invent activities.
 
 For each trip window, output:
   - Date range and destination
   - Reconstructed daily activities (fuse transaction + photo + map where possible)
-  - Spending breakdown by actual activity (not just raw category)
+  - Spending breakdown by actual activity
   - What the photos reveal about travel style and preferences
   - Zero-cost activities visible in photos but absent from transactions
 
@@ -914,37 +973,46 @@ End with a cross-window summary covering:
 
 Be specific. Quote dates, amounts, place names, and photo descriptions where available."""
 
+
 def analyser(state: dict) -> dict:
     """
     Analyse retrieved evidence to extract facts, patterns, and constraints.
-
-    Output is a structured analysis string stored in state["analysis"].
-    This separates factual extraction from answer generation, giving the
-    downstream responder clean structured input rather than raw documents.
+    When image_paths are present, encodes them and sends to the VLM so the
+    images become part of the evidence alongside retrieved documents.
     """
     _ts("analyser: start")
     docs             = state.get("retrieved_docs", [])
     temporal_context = state.get("temporal_context", "")
     query            = state["query"]
     memory           = state.get("memory", {})
+    image_paths      = state.get("image_paths", [])
 
     context_str = temporal_context if temporal_context else _docs_to_context(docs)
     memory_str  = json.dumps(memory) if memory else "(none stored)"
 
-    if not docs:
-        _ts("analyser: done (no docs)")
+    if not docs and not image_paths:
+        _ts("analyser: done (no docs, no images)")
         return {
-            "analysis":  "(no evidence retrieved)",
+            "analysis":   "(no evidence retrieved)",
             "tool_calls": state.get("tool_calls", []) + ["analyser(no_docs)"],
         }
 
-    response = _llm.invoke([
+    image_blocks = _encode_images(image_paths)
+    model        = _vlm if image_blocks else _llm
+
+    if image_blocks:
+        log.info(f"[analyser] {len(image_blocks)} image(s) attached — using VLM ({_GROQ_VLM_MODEL})")
+
+    text_content = (
+        f"User preferences: {memory_str}\n\n"
+        f"Evidence:\n{context_str}\n\n"
+        f"Question being answered: {query}"
+    )
+    user_content = _build_user_content(text_content, image_blocks)
+
+    response = model.invoke([
         SystemMessage(content=_ANALYSER_SYSTEM),
-        HumanMessage(content=(
-            f"User preferences: {memory_str}\n\n"
-            f"Evidence:\n{context_str}\n\n"
-            f"Question being answered: {query}"
-        )),
+        HumanMessage(content=user_content),
     ])
     analysis = response.content.strip()
     log.info(f"[analyser] analysis length={len(analysis)} chars")
@@ -973,10 +1041,7 @@ Guidelines:
 
 
 def direct_responder(state: dict) -> dict:
-    """
-    Lookup path: answer directly from the analysis.
-    Used when intent="lookup" — the answer exists in the data.
-    """
+    """Lookup path: answer directly from the analysis."""
     _ts("direct_responder: start")
     analysis = state.get("analysis", "(no analysis)")
     memory   = state.get("memory", {})
@@ -1015,10 +1080,7 @@ Guidelines:
 
 
 def creative_responder(state: dict) -> dict:
-    """
-    Generative path: produce a new recommendation/plan from the analysis.
-    Used when intent="generative" — the answer must go beyond the data.
-    """
+    """Generative path: produce a new recommendation/plan from the analysis."""
     _ts("creative_responder: start")
     analysis = state.get("analysis", "(no analysis)")
     memory   = state.get("memory", {})

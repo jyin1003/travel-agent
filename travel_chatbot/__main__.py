@@ -2,14 +2,24 @@
 travel_chatbot/__main__.py
 
 Entry point for the Travel Chatbot CLI.
+
+Image input: append image file paths anywhere in your message and they will
+be automatically detected and passed to the agent as visual context.
+
+  Example:
+    You: what's in this photo? /photos/tokyo_dinner.jpg
+    You: describe these two shots /a.jpg /b.png and tell me where I was
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import logging, warnings
-import sys, os
+import logging
+import shlex
+import warnings
+import sys
+import os
 
 
 # ---------------------------------------------------------------------------
@@ -32,29 +42,23 @@ def _parse_args() -> argparse.Namespace:
 args = _parse_args()
 
 # ---------------------------------------------------------------------------
-# Logging configuration - happens before any agent import
+# Logging configuration — happens before any agent import
 # ---------------------------------------------------------------------------
 
 if args.profile:
-    # Re-use the same format as nodes.py so log lines look consistent
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [NODES] [%(levelname)s] %(message)s",
         datefmt="%H:%M:%S",
-        stream=sys.stderr,          # keep logs on stderr so stdout stays clean
+        stream=sys.stderr,
     )
-    # In profile mode: do NOT install any print/stream filters — logging
-    # internals must have direct, unmodified access to sys.stderr.
 else:
-    # Silence everything – set root logger to WARNING and kill any existing handlers
     logging.basicConfig(level=logging.WARNING)
     for name in list(logging.Logger.manager.loggerDict):
         logging.getLogger(name).setLevel(logging.WARNING)
-    # Also suppress LangChain / LangGraph internal loggers that configure themselves
     for noisy in ("langchain", "langchain_core", "langgraph", "httpx", "httpcore", "openai"):
         logging.getLogger(noisy).setLevel(logging.WARNING)
 
-    # Suppress model warnings from HF (only needed in silent mode)
     logging.getLogger("huggingface_hub.utils._http").setLevel(logging.ERROR)
     logging.getLogger("mlx_lm").setLevel(logging.ERROR)
     warnings.filterwarnings("ignore")
@@ -92,11 +96,11 @@ else:
     sys.stderr = _FilteredStream(sys.stderr)
 
 # Now safe to import the agent
-from agent.graph import run_query  # noqa: E402  (import after logging setup)
+from agent.graph import run_query  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
-# ANSI helpers (degrade gracefully on terminals that don't support colour)
+# ANSI helpers
 # ---------------------------------------------------------------------------
 
 _USE_COLOUR = sys.stdout.isatty()
@@ -112,6 +116,56 @@ DIM    = lambda t: _c("2",     t)
 
 
 # ---------------------------------------------------------------------------
+# Image path parsing
+# ---------------------------------------------------------------------------
+
+_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+
+
+def _parse_input(raw: str) -> tuple[str, list[str]]:
+    """
+    Split a user input line into (query_text, image_paths).
+
+    Tokens ending in a known image extension are extracted as image paths;
+    the remainder is returned as the query text.
+
+    Uses shlex.split so quoted paths with spaces work:
+        'what is this? "/my photos/tokyo dinner.jpg"'
+
+    Falls back to whitespace split if shlex fails (e.g. unmatched quotes).
+
+    Examples:
+        "what's in this? /photos/abc.jpg"
+            → ("what's in this?", ["/photos/abc.jpg"])
+        "compare these /a.jpg /b.png and tell me where I was"
+            → ("compare these  and tell me where I was", ["/a.jpg", "/b.png"])
+        "just a normal question"
+            → ("just a normal question", [])
+    """
+    try:
+        tokens = shlex.split(raw)
+    except ValueError:
+        tokens = raw.split()
+
+    image_paths: list[str] = []
+    text_tokens: list[str] = []
+
+    for token in tokens:
+        if any(token.lower().endswith(ext) for ext in _IMAGE_EXTS):
+            image_paths.append(token)
+        else:
+            text_tokens.append(token)
+
+    query_text = " ".join(text_tokens).strip()
+    # If everything was an image path and no query text remains, use the
+    # original raw input as the query so the agent still has something to work with
+    if not query_text:
+        query_text = raw.strip()
+
+    return query_text, image_paths
+
+
+# ---------------------------------------------------------------------------
 # Intro banner
 # ---------------------------------------------------------------------------
 
@@ -123,6 +177,9 @@ BANNER = f"""
 
 Ask me anything about your travels — past trips, spending,
 photos, places you've saved, or where to go next.
+
+You can include image file paths in your message:
+  {DIM('e.g.  what restaurant is this? /photos/dinner.jpg')}
 
 {DIM("Type 'exit' or 'quit' to leave.")}
 {DIM("Run with --profile for full debug output.")}
@@ -154,17 +211,27 @@ def main() -> None:
             print("Goodbye! Safe travels. ✈")
             break
 
-        result = run_query(user_input, session_memory=session)
+        query_text, image_paths = _parse_input(user_input)
+
+        # Warn the user about any paths that don't exist on disk
+        missing = [p for p in image_paths if not os.path.exists(p)]
+        for p in missing:
+            print(DIM(f"  ⚠  Image not found: {p}"))
+        image_paths = [p for p in image_paths if os.path.exists(p)]
+
+        if image_paths:
+            print(DIM(f"  [attaching {len(image_paths)} image(s): {', '.join(os.path.basename(p) for p in image_paths)}]"))
+
+        result = run_query(query_text, session_memory=session, image_paths=image_paths)
         session.update(result.get("memory", {}))
 
         answer = result.get("answer", "").strip()
         print(f"\n{GREEN('Travel Chatbot:')} {answer}\n")
 
-        # --profile: dump full state to stderr so it doesn't mix with the answer
         if args.profile:
             state_dump = {
                 k: v for k, v in result.items()
-                if k != "messages"          # BaseMessage objects aren't JSON-serialisable by default
+                if k != "messages"
             }
             print(
                 YELLOW("\n── full agent state ──────────────────────────────────\n")
