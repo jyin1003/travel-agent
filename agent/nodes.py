@@ -150,7 +150,7 @@ def _sanitise_query(value, fallback: str) -> str:
     return s
 
 
-def _docs_to_context(docs: list[dict], max_docs: int = 8) -> str:
+def _docs_to_context(docs: list[dict], max_docs: int = 20) -> str:
     lines = []
     for i, d in enumerate(docs[:max_docs], 1):
         meta   = d.get("metadata", {})
@@ -240,27 +240,46 @@ def _build_trip_windows(docs: list[dict], gap_days: int = TRIP_WINDOW_GAP_DAYS) 
 def _windows_to_context(windows: list[dict], undated: list[dict]) -> str:
     lines = []
     for i, w in enumerate(windows, 1):
-        lines.append(f"=== Trip window {i}: {w['start']} to {w['end']} ({w['days']} days) ===")
-        if w["transactions"]:
-            lines.append("  Transactions:")
-            for doc in w["transactions"][:5]:
-                lines.append(f"    - {doc.get('document', '')[:150]}")
+        lines.append(
+            f"=== Trip window {i}: {w['start']} → {w['end']} "
+            f"({w['days']} day{'s' if w['days'] != 1 else ''}) ==="
+        )
+
+        # Interleave transactions and photos sorted by date so the analyser
+        # sees them in chronological order and can spot same-day pairs
+        dated_records = []
+        for doc in w["transactions"]:
+            dt = _extract_date(doc)
+            dated_records.append((dt, "transaction", doc))
+        for doc in w["photos"]:
+            dt = _extract_date(doc)
+            dated_records.append((dt, "photo", doc))
+        dated_records.sort(key=lambda x: (x[0] or datetime.min.replace(tzinfo=timezone.utc)))
+
+        if dated_records:
+            lines.append("  Chronological activity:")
+            prev_date = None
+            for dt, rec_type, doc in dated_records:
+                date_str = dt.date().isoformat() if dt else "unknown date"
+                if date_str != prev_date:
+                    lines.append(f"  [{date_str}]")
+                    prev_date = date_str
+                text = doc.get("document", "")[:180]
+                lines.append(f"    {rec_type.upper()}: {text}")
+
         if w["map"]:
-            lines.append("  Map / places:")
-            for doc in w["map"][:3]:
-                lines.append(f"    - {doc.get('document', '')[:150]}")
-        if w["photos"]:
-            lines.append("  Photos:")
-            for doc in w["photos"][:3]:
-                lines.append(f"    - {doc.get('document', '')[:150]}")
+            lines.append("  Saved places (map):")
+            for doc in w["map"][:8]:
+                lines.append(f"    MAP: {doc.get('document', '')[:150]}")
+
         lines.append("")
+
     if undated:
-        lines.append("=== Undated records ===")
-        for doc in undated[:5]:
+        lines.append("=== Records without dates ===")
+        for doc in undated[:10]:
             src  = doc.get("metadata", {}).get("source_type", "?")
             lines.append(f"  [{src}] {doc.get('document', '')[:150]}")
     return "\n".join(lines)
-
 
 # ---------------------------------------------------------------------------
 # Node 1 -- Query Router
@@ -363,53 +382,78 @@ def memory_manager(state: dict) -> dict:
 
 _PLANNER_SYSTEM = """You are a retrieval planner for a personal travel knowledge base.
 
-Source types available:
-  transaction   - bank/card transactions (merchant, amount, category, date, destination)
-  map           - saved places, routes, points of interest from Google Maps
-  photo_caption - AI-generated captions describing travel photos (scene, location, date)
+Source types:
+    transaction   - bank/card transactions: merchant, amount, category, date, destination
+    map           - saved Google Maps places: name, address, type, rating, opening hours
+    photo_caption - AI captions of travel photos: scene description, location, date, GPS
 
 Retrieval modes:
-  "text"  - transactions + map entries
-  "image" - photo captions only
-  "full"  - all three (DEFAULT — use unless clearly single-source)
+    "text"  - transactions + map entries only
+    "image" - photo captions only  
+    "full"  - all three (use this by DEFAULT for almost all queries)
 
-The system correlates all three sources by timestamp into trip windows after retrieval,
-so fetching "full" gives the richest cross-modal context.
+CRITICAL RULE — parallel source coverage:
+For every query, generate at least ONE sub-query targeting EACH source type:
+    - A transaction sub-query  (what was bought/paid)
+    - A map sub-query          (what places were saved/visited)
+    - A photo sub-query        (what scenes/activities were photographed)
 
-For GENERATIVE queries (recommendations, suggestions, planning):
-  Fetch evidence about PAST behaviour to inform what's NEW:
-  - Past destinations and costs (to know what's already been done and typical budget)
-  - Saved map places (to understand interests and travel style)
-  - Photo scenes (to understand what environments the user enjoys)
+This is essential because the system links all three by DATE into trip windows.
+Photos reveal WHAT the user was doing when a transaction occurred.
+Map saves reveal WHERE they were. Transactions reveal HOW MUCH they spent.
+Together they reconstruct the full activity, not just the cost.
 
-For LOOKUP queries:
-  Fetch the specific evidence needed to answer directly.
+Photo sub-queries should describe VISUAL SCENES, not just locations:
+    Good: "street food market stalls eating", "mountain hiking trail scenery"
+    Bad:  "travel photo locations visited"
 
 Sub-query rules:
-  - Plain natural language strings only, NOT SQL
-  - 2-5 sub-queries targeting different evidence angles
-  - Filters: destination (str), year (int), source_type (str)
+    - Plain natural language strings only, NOT SQL
+    - 4-6 sub-queries covering all three source types
+    - At least 1 transaction, 1 map, and 2 photo scene sub-queries
+    - Filters: destination (str), year (int), source_type (str)
 
 Examples:
 
-Query: recommend somewhere new to travel for less than $3000 [intent=generative]
-{"sub_queries": ["past trip total costs by destination", "destinations previously visited transactions", "saved map places countries", "travel photo locations visited"],
- "retrieval_mode": "full", "text_filter": {}, "image_filter": {}}
+Query: what do I spend money on while travelling [intent=lookup]
+{"sub_queries": [
+    "restaurant food drink payment receipt",
+    "transport taxi train bus ticket fare",
+    "accommodation hotel hostel payment",
+    "shopping market souvenir purchase",
+    "street food market eating local cuisine photo",
+    "transport station platform commuting photo",
+    "hotel accommodation room stay photo",
+    "tourist attraction museum sightseeing photo",
+    "saved restaurants cafes food places map",
+    "saved transport routes stations map"
+    ],
+    "retrieval_mode": "full", "text_filter": {}, "image_filter": {}}
 
-Query: what did I spend in London [intent=lookup]
-{"sub_queries": ["London spending transactions", "London transport food accommodation costs"],
- "retrieval_mode": "text", "text_filter": {"destination": "London", "source_type": "transaction"}, "image_filter": {}}
+Query: what was my Hong Kong trip like [intent=lookup]
+{"sub_queries": [
+    "Hong Kong transactions spending food transport",
+    "Hong Kong saved places restaurants attractions map",
+    "Hong Kong street scenes harbour skyline photo",
+    "Hong Kong food markets local cuisine photo",
+    "Hong Kong transport MTR ferry commute photo"
+    ],
+    "retrieval_mode": "full",
+    "text_filter": {"destination": "Hong Kong"},
+    "image_filter": {"destination": "Hong Kong"}}
 
-Query: show me photos from my Munich trip [intent=lookup]
-{"sub_queries": ["Munich travel photos scenes"],
- "retrieval_mode": "image", "text_filter": {}, "image_filter": {"destination": "Munich"}}
-
-Query: what was my London trip like [intent=lookup]
-{"sub_queries": ["London transactions spending", "London map places", "London photos scenes"],
- "retrieval_mode": "full", "text_filter": {"destination": "London"}, "image_filter": {"destination": "London"}}
+Query: recommend somewhere new to travel [intent=generative]
+{"sub_queries": [
+    "all destination transactions total costs",
+    "accommodation food transport spending amounts",
+    "saved map places countries points of interest",
+    "outdoor nature landscape scenery travel photo",
+    "urban city streets architecture cultural photo",
+    "food dining restaurant local cuisine photo"
+    ],  
+    "retrieval_mode": "full", "text_filter": {}, "image_filter": {}}
 
 Respond ONLY with valid JSON:"""
-
 
 def retrieval_planner(state: dict) -> dict:
     """Decompose the query into sub-queries and select retrieval parameters."""
@@ -499,7 +543,7 @@ def tool_executor(state: dict) -> dict:
     for sq in sub_queries:
         _ts(f"tool_executor: retrieve  q={sq[:50]!r}  mode={mode}")
         try:
-            results = retrieve(query=sq, mode=mode, k=5,
+            results = retrieve(query=sq, mode=mode, k=15,
                                text_where=text_filter, image_where=image_filter)
             tool_fn = _MODE_TO_TOOL.get(mode, hybrid_search_tool)
             tool_trace.append(f"{tool_fn.name}(q={sq[:40]!r})")
@@ -511,16 +555,273 @@ def tool_executor(state: dict) -> dict:
         for r in results:
             accumulated[r["id"]] = r
 
+    # Safety net: if no photo_caption docs came back, run a dedicated caption pass.
+    # This ensures the temporal correlator always has photo evidence to fuse with
+    # transactions, even when the planner sub-queries didn't surface any.
+    all_docs = list(accumulated.values())
+    photo_count = sum(
+        1 for d in all_docs
+        if d.get("metadata", {}).get("source_type") == "photo_caption"
+    )
+    if photo_count == 0 and mode != "text":
+        _ts("tool_executor: no photos retrieved — running caption fallback pass")
+        try:
+            fallback_results = retrieve(
+                query=state["query"],
+                mode="caption_only",
+                k=10,
+                image_where=image_filter,
+            )
+            tool_trace.append(f"caption_fallback(q={state['query'][:40]!r})")
+            log.info(f"[tool_executor] caption fallback returned {len(fallback_results)} docs")
+            for r in fallback_results:
+                accumulated[r["id"]] = r
+        except Exception as e:
+            log.warning(f"[tool_executor] caption fallback failed: {e}")
+
     all_docs   = list(accumulated.values())
     image_docs = [d for d in all_docs if d.get("metadata", {}).get("source_type") == "photo_caption"]
-    log.info(f"[tool_executor] total unique docs={len(all_docs)}  images={len(image_docs)}")
-    _ts(f"tool_executor: done  ({len(all_docs)} unique docs)")
+    log.info(f"[tool_executor] total unique docs={len(all_docs)}  photos={len(image_docs)}")
+    _ts(f"tool_executor: done  ({len(all_docs)} unique docs, {len(image_docs)} photos)")
     return {
         "retrieved_docs":   all_docs,
         "retrieved_images": image_docs,
         "tool_calls":       tool_trace,
     }
 
+# ---------------------------------------------------------------------------
+# Rule-based category inference (agent-side, no chunker changes needed)
+# ---------------------------------------------------------------------------
+
+_CATEGORY_RULES: list[tuple[str, list[str]]] = [
+    ("accommodation", [
+        "hotel", "hostel", "airbnb", "booking.com", "hotels.com", "inn",
+        "lodge", "resort", "motel", "guesthouse", "bnb", "b&b", "suites",
+        "apartments", "serviced apartment",
+    ]),
+    ("flights", [
+        "ryanair", "easyjet", "british airways", "lufthansa", "emirates",
+        "cathay", "qantas", "delta", "united airlines", "southwest",
+        "air france", "klm", "wizz", "jet2", "flybe", "airport", "airways",
+    ]),
+    ("transport", [
+        "uber", "lyft", "bolt", "grab", "ola", "taxi", "cab",
+        "tfl", "oyster", "trainline", "national rail", "eurostar",
+        "bus", "metro", "tube", "rail", "ferry", "tram", "mtr",
+        "transport for london", "heathrow express",
+    ]),
+    ("food & drink", [
+        "restaurant", "cafe", "coffee", "starbucks", "costa", "pret",
+        "mcdonald", "kfc", "subway", "nandos", "wagamama", "itsu",
+        "eat", "food", "dining", "bistro", "brasserie", "pub", "bar",
+        "bakery", "deli", "sushi", "pizza", "burger", "chicken",
+        "ramen", "noodle", "curry", "dim sum", "tapas", "brunch",
+        "deliveroo", "uber eats", "just eat",
+    ]),
+    ("groceries", [
+        "supermarket", "tesco", "sainsbury", "waitrose", "marks & spencer",
+        "m&s", "asda", "morrisons", "lidl", "aldi", "co-op", "whole foods",
+        "trader joe", "kroger", "carrefour", "rewe", "spar",
+    ]),
+    ("activities & attractions", [
+        "museum", "gallery", "exhibition", "tour", "tickets", "entry",
+        "admission", "zoo", "aquarium", "theme park", "cinema", "theatre",
+        "concert", "event", "excursion", "experience", "escape room",
+        "bowling", "climbing", "kayak", "surf", "ski", "dive",
+    ]),
+    ("shopping", [
+        "amazon", "ebay", "asos", "zara", "h&m", "primark", "topshop",
+        "john lewis", "selfridges", "harrods", "department store",
+        "pharmacy", "boots", "duty free", "souvenir", "gift shop",
+        "market stall", "mall", "outlet",
+    ]),
+    ("health & wellness", [
+        "pharmacy", "chemist", "doctor", "clinic", "hospital", "dentist",
+        "gym", "spa", "massage", "yoga", "fitness",
+    ]),
+    ("communication & data", [
+        "sim card", "data plan", "roaming", "vodafone", "ee", "o2",
+        "three", "at&t", "verizon", "t-mobile",
+    ]),
+    ("cash withdrawal", [
+        "atm", "cash", "withdrawal", "cashpoint",
+    ]),
+]
+
+
+def _rule_infer_category(payee: str, description: str, address: str = "") -> str:
+    """
+    Rule-based category inference from payee, description, and address text.
+    Case-insensitive substring match. First matching rule wins.
+    Returns empty string if no rule matches.
+    """
+    haystack = " ".join([payee, description, address]).lower()
+    for category, keywords in _CATEGORY_RULES:
+        if any(kw in haystack for kw in keywords):
+            return category
+    return ""
+
+# ---------------------------------------------------------------------------
+# Node 4b -- Transaction Enricher
+# ---------------------------------------------------------------------------
+
+_ENRICHER_SYSTEM = """You are enriching bank transaction records with inferred activity context.
+
+For each transaction you will be given:
+  - The raw transaction (payee, amount, existing category if any, date)
+  - Photos taken on the same or adjacent day (AI captions describing what was seen)
+  - Map places saved on the same trip (names, types, addresses)
+
+Your job: infer the most specific activity label possible.
+
+Rules:
+  - If a photo caption describes an activity that plausibly matches the transaction
+    payee/amount, use that activity as the label
+    (e.g. payee="food stall" + photo "crowded night market with noodle stalls"
+    → "street food at night market")
+  - If a map save matches the payee name or area, use the place type to refine
+    (e.g. payee="The Arches" + map save "The Arches Bar & Grill [restaurant]"
+    → "dinner at The Arches")
+  - If no cross-modal evidence exists, infer from payee and description text alone
+  - Never invent specifics not supported by the evidence
+  - Keep labels concise: 3-8 words
+
+Respond with ONLY a JSON array, one object per transaction:
+[{"id": "txn_001", "inferred_activity": "street food at night market"}, ...]"""
+
+
+def transaction_enricher(state: dict) -> dict:
+    """
+    Enrich transaction records with inferred activity labels by:
+      1. Rule-based inference from payee/description/address text (fast, no LLM)
+      2. LLM inference for remaining ambiguous transactions, cross-referencing
+         same-day photos and map saves to determine what the user was actually doing
+    """
+    _ts("transaction_enricher: start")
+    docs = state.get("retrieved_docs", [])
+    if not docs:
+        _ts("transaction_enricher: done (no docs)")
+        return {
+            "retrieved_docs": docs,
+            "tool_calls": state.get("tool_calls", []) + ["transaction_enricher(no_docs)"],
+        }
+
+    transactions = [d for d in docs if d.get("metadata", {}).get("source_type") == "transaction"]
+    photos       = [d for d in docs if d.get("metadata", {}).get("source_type") == "photo_caption"]
+    map_saves    = [d for d in docs if d.get("metadata", {}).get("source_type") == "map"]
+
+    if not transactions:
+        _ts("transaction_enricher: done (no transactions)")
+        return {
+            "retrieved_docs": docs,
+            "tool_calls": state.get("tool_calls", []) + ["transaction_enricher(no_txns)"],
+        }
+
+    # ── Pass 1: rule-based inference ────────────────────────────────────────
+    rule_enriched = 0
+    for txn in transactions:
+        meta = txn.get("metadata", {})
+        if meta.get("inferred_activity"):
+            continue  # already enriched upstream
+        payee       = meta.get("payee", "")
+        description = meta.get("description", "")
+        address     = meta.get("address", "")
+        inferred    = _rule_infer_category(payee, description, address)
+        if inferred:
+            meta["inferred_activity"] = inferred
+            txn["document"] = txn.get("document", "") + f" [activity: {inferred}]"
+            rule_enriched += 1
+
+    log.info(f"[transaction_enricher] rule-based: {rule_enriched}/{len(transactions)} categorised")
+
+    # ── Pass 2: LLM inference for ambiguous transactions with photo evidence ─
+    def _date_key(doc: dict) -> str:
+        dt = _extract_date(doc)
+        return dt.date().isoformat() if dt else "unknown"
+
+    photos_by_date: dict[str, list[dict]] = {}
+    map_by_date:    dict[str, list[dict]] = {}
+    for p in photos:
+        photos_by_date.setdefault(_date_key(p), []).append(p)
+    for m in map_saves:
+        map_by_date.setdefault(_date_key(m), []).append(m)
+
+    # Send to LLM if: still no category OR same-day photos exist that could
+    # refine a coarse rule-based label into something more specific
+    to_enrich_llm = []
+    for txn in transactions:
+        meta     = txn.get("metadata", {})
+        txn_date = _date_key(txn)
+        has_photos = bool(
+            photos_by_date.get(txn_date) or photos_by_date.get("unknown")
+        )
+        already_specific = bool(meta.get("inferred_activity")) and not has_photos
+        if not already_specific:
+            to_enrich_llm.append(txn)
+
+    llm_enriched = 0
+    if to_enrich_llm:
+        txn_blocks = []
+        for txn in to_enrich_llm[:20]:
+            meta     = txn.get("metadata", {})
+            txn_date = _date_key(txn)
+
+            same_day_photos = (
+                photos_by_date.get(txn_date, []) +
+                photos_by_date.get("unknown", [])
+            )[:4]
+            same_day_maps = map_by_date.get(txn_date, [])[:3]
+
+            txn_blocks.append({
+                "id":              txn["id"],
+                "date":            txn_date,
+                "payee":           meta.get("payee", ""),
+                "description":     meta.get("description", ""),
+                "amount":          meta.get("amount", ""),
+                "current_category": meta.get("inferred_activity") or meta.get("category", ""),
+                "photos_same_day": [p.get("document", "")[:150] for p in same_day_photos],
+                "map_saves":       [m.get("document", "")[:100] for m in same_day_maps],
+            })
+
+        try:
+            response = _llm.invoke([
+                SystemMessage(content=_ENRICHER_SYSTEM),
+                HumanMessage(content=json.dumps(txn_blocks, indent=2)),
+            ])
+            raw = re.search(r"\[.*\]", response.content, re.DOTALL)
+            if raw:
+                for item in json.loads(raw.group()):
+                    txn_id   = item.get("id")
+                    activity = item.get("inferred_activity", "").strip()
+                    if not txn_id or not activity:
+                        continue
+                    # Find and update the matching doc in the full docs list
+                    for doc in docs:
+                        if doc["id"] == txn_id:
+                            doc["metadata"]["inferred_activity"] = activity
+                            # Avoid duplicating the tag if rule already added one
+                            if f"[activity:" not in doc.get("document", ""):
+                                doc["document"] = doc.get("document", "") + f" [activity: {activity}]"
+                            else:
+                                # Replace the coarse rule label with the refined LLM label
+                                doc["document"] = re.sub(
+                                    r"\[activity:[^\]]*\]",
+                                    f"[activity: {activity}]",
+                                    doc["document"],
+                                )
+                            llm_enriched += 1
+                            break
+        except Exception as e:
+            log.warning(f"[transaction_enricher] LLM pass failed: {e}")
+
+    log.info(f"[transaction_enricher] LLM pass: {llm_enriched}/{len(to_enrich_llm)} refined")
+    _ts(f"transaction_enricher: done (rule={rule_enriched}, llm={llm_enriched})")
+    return {
+        "retrieved_docs": docs,
+        "tool_calls": state.get("tool_calls", []) + [
+            f"transaction_enricher(rule={rule_enriched}, llm={llm_enriched})"
+        ],
+    }
 
 # ---------------------------------------------------------------------------
 # Node 5 -- Temporal Correlator
@@ -572,20 +873,46 @@ def temporal_correlator(state: dict) -> dict:
 # Node 6 -- Analyser
 # ---------------------------------------------------------------------------
 
-_ANALYSER_SYSTEM = """You are an analyst extracting structured insights from a user's personal travel history.
+_ANALYSER_SYSTEM = """You are an analyst reconstructing a user's travel activities from three linked data sources:
 
-Your job is to analyse the evidence and produce a clear summary that can be used to answer the user's question.
-Do NOT answer the question yet — just analyse the evidence.
+  TRANSACTIONS  — what they paid for (merchant, amount, category, date)
+  MAP SAVES     — places they bookmarked (name, type, address, rating)
+  PHOTOS        — what they were seeing/doing (AI caption, GPS, date)
 
-Extract and summarise:
-1. Destinations visited (list each with approximate date and total spend if available)
-2. Spending patterns (which categories: food, transport, accommodation, shopping, activities — and rough amounts)
-3. Travel style signals (budget level, trip length, types of places saved or photographed)
-4. What the user seems to enjoy (inferred from map saves and photo scenes)
-5. Any budget or preference constraints relevant to the question
+The evidence arrives grouped into TRIP WINDOWS — clusters of records that share
+overlapping dates (within a few days of each other). Your job is to fuse all three
+sources within each window to reconstruct what actually happened.
 
-Be specific. Use numbers where available. Flag anything that seems notable or relevant to the question."""
+FUSION RULES:
+0. Check for pre-enriched activity labels — transactions may already carry an
+   'inferred_activity' field derived from same-day photo and map evidence. If
+   present, use it as the primary activity description rather than re-deriving it.
+1. Anchor to dates — if a photo and a transaction share the same date or are within
+   1 day of each other, treat them as the SAME activity unless the content contradicts it.
+2. Photos reveal the activity — a transaction labelled "restaurant" + a photo of a
+   street food stall on the same day = the user ate at a street food stall, not a
+   sit-down restaurant. Always let the photo description refine the transaction label.
+3. Map saves provide intent and context — a saved place near a transaction location
+   confirms what the user was planning to do. A highly-rated restaurant save + food
+   transaction nearby = deliberate dining choice, not incidental spending.
+4. When no transaction matches a photo — the photo still tells you what the user did
+   for free (sightseeing, hiking, beach, walking). Note these as zero-cost activities.
+5. When no photo matches a transaction — describe the transaction category only.
+   Do not invent activities.
 
+For each trip window, output:
+  - Date range and destination
+  - Reconstructed daily activities (fuse transaction + photo + map where possible)
+  - Spending breakdown by actual activity (not just raw category)
+  - What the photos reveal about travel style and preferences
+  - Zero-cost activities visible in photos but absent from transactions
+
+End with a cross-window summary covering:
+  - Overall spending patterns by activity type
+  - Recurring preferences visible across multiple trips
+  - Anything notable about how photo evidence changes the interpretation of transactions
+
+Be specific. Quote dates, amounts, place names, and photo descriptions where available."""
 
 def analyser(state: dict) -> dict:
     """

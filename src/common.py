@@ -73,9 +73,9 @@ def get_sentence_model():
     global _sentence_model
     if _sentence_model is None:
         from sentence_transformers import SentenceTransformer
-        log.info(f"Loading sentence-transformers: {config.SENTENCE_MODEL}", flush=True)
+        log.info(f"Loading sentence-transformers: {config.SENTENCE_MODEL}")
         _sentence_model = SentenceTransformer(config.SENTENCE_MODEL)
-        log.info("sentence-transformers ready.", flush=True)
+        log.info("sentence-transformers ready.")
     return _sentence_model
 
 
@@ -83,11 +83,11 @@ def get_clip():
     global _clip_model, _clip_processor
     if _clip_model is None:
         from transformers import CLIPModel, CLIPProcessor
-        log.info(f"Loading CLIP: {config.CLIP_MODEL}", flush=True)
+        log.info(f"Loading CLIP: {config.CLIP_MODEL}")
         _clip_model = CLIPModel.from_pretrained(config.CLIP_MODEL)
         _clip_processor = CLIPProcessor.from_pretrained(config.CLIP_MODEL)
         _clip_model.eval()
-        log.info("CLIP ready.", flush=True)
+        log.info("CLIP ready.")
     return _clip_model, _clip_processor
 
 

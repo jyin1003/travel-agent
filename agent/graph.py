@@ -40,6 +40,7 @@ from .nodes import (
     retrieval_planner,
     temporal_correlator,
     tool_executor,
+    transaction_enricher,
 )
 
 
@@ -113,6 +114,7 @@ def build_graph() -> StateGraph:
     graph.add_node("memory_manager",      memory_manager)
     graph.add_node("retrieval_planner",   retrieval_planner)
     graph.add_node("tool_executor",       tool_executor)
+    graph.add_node("transaction_enricher", transaction_enricher)
     graph.add_node("temporal_correlator", temporal_correlator)
     graph.add_node("analyser",            analyser)
     graph.add_node("direct_responder",    direct_responder)
@@ -131,7 +133,8 @@ def build_graph() -> StateGraph:
 
     graph.add_edge("memory_manager",      "retrieval_planner")
     graph.add_edge("retrieval_planner",   "tool_executor")
-    graph.add_edge("tool_executor",       "temporal_correlator")
+    graph.add_edge("tool_executor",        "transaction_enricher")
+    graph.add_edge("transaction_enricher", "temporal_correlator")
     graph.add_edge("temporal_correlator", "analyser")
 
     graph.add_conditional_edges(
