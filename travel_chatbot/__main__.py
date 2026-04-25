@@ -223,7 +223,9 @@ def main() -> None:
             print(DIM(f"  [attaching {len(image_paths)} image(s): {', '.join(os.path.basename(p) for p in image_paths)}]"))
 
         result = run_query(query_text, session_memory=session, image_paths=image_paths)
-        session.update(result.get("memory", {}))
+        new_memory = result.get("memory", {})
+        if new_memory:
+            session.update(new_memory)
 
         answer = result.get("answer", "").strip()
         print(f"\n{GREEN('Travel Chatbot:')} {answer}\n")

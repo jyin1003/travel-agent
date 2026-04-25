@@ -4,11 +4,10 @@ agent/graph.py
 Graph topology:
 
   query_router
-       |  conditional
-  ┌────┴────┐
-  memory    retrieval_planner
-  manager        |
-  └────┬────┘
+       |
+  memory_manager
+       |
+  retrieval_planner
        |
   tool_executor
        |
@@ -19,8 +18,7 @@ Graph topology:
   ┌────┴────────┐
   direct     creative
   responder  responder
-  └────┬────────┘
-      END
+
 """
 
 from __future__ import annotations
@@ -92,12 +90,8 @@ class AgentState(TypedDict):
 # ---------------------------------------------------------------------------
 # Routing edges
 # ---------------------------------------------------------------------------
-
 def _route_after_router(state: AgentState) -> str:
-    if state.get("memory_lookup") or state.get("memory_write"):
-        return "memory_manager"
-    return "retrieval_planner"
-
+    return "memory_manager"   # always load memory; node itself guards writes
 
 def _route_after_analyser(state: AgentState) -> str:
     """Route to creative_responder for generative intent, direct_responder otherwise."""
@@ -123,16 +117,8 @@ def build_graph() -> StateGraph:
 
     graph.set_entry_point("query_router")
 
-    graph.add_conditional_edges(
-        "query_router",
-        _route_after_router,
-        {
-            "memory_manager":    "memory_manager",
-            "retrieval_planner": "retrieval_planner",
-        },
-    )
-
-    graph.add_edge("memory_manager",      "retrieval_planner")
+    graph.add_edge("query_router", "memory_manager")
+    graph.add_edge("memory_manager", "retrieval_planner")
     graph.add_edge("retrieval_planner",   "tool_executor")
     graph.add_edge("tool_executor",        "transaction_enricher")
     graph.add_edge("transaction_enricher", "temporal_correlator")
