@@ -409,6 +409,11 @@ def query_router(state: dict) -> dict:
     if any(kw in q_lower for kw in _GENERATIVE_SIGNALS):
         intent = "generative"
 
+    # Hard override: if query contains preference keywords, force memory_write
+    if any(kw in state["query"].lower() for kw in _PREFERENCE_SIGNALS):
+        mem_write = True
+
+
     # If images are attached and no generative signal, lean toward cross_modal
     if image_blocks and query_type not in ("cross_modal", "multi_hop"):
         query_type = "cross_modal"

@@ -162,6 +162,10 @@ def run_query(query: str, session_memory: dict | None = None, image_paths: list[
         grounded         : verification result
         tool_calls       : full execution trace
     """
+    # Sync the module-level memory store with whatever the session carries
+    if session_memory:
+        from agent.tools import update_memory_store
+        update_memory_store(session_memory)
     initial: AgentState = {
         "query":             query,
         "image_paths":       image_paths or [],
