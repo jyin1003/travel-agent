@@ -139,7 +139,7 @@ def _infer_destination(text: str, api_key: Optional[str] = None) -> Optional[str
         return None
  
     if api_key is None:
-        api_key = config.GOOGLE_API_KEY
+        api_key = os.getenv("GOOGLE_API_KEY"),
  
     if not api_key:
         return None   # degrade gracefully rather than crash
