@@ -89,8 +89,8 @@ def _ts(label: str) -> None:
 # Ablation controls
 # ---------------------------------------------------------------------------
 
-ENABLE_VERIFY: bool = False
-ENABLE_TEMPORAL_CORRELATION: bool = True
+ENABLE_VERIFY: bool = os.getenv("AGENT_VERIFY", "0") == "1"
+ENABLE_TEMPORAL_CORRELATION: bool = os.getenv("AGENT_TEMPORAL", "1") == "1"
 TRIP_WINDOW_GAP_DAYS: int = 3
 
 # ---------------------------------------------------------------------------

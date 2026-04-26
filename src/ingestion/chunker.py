@@ -15,12 +15,17 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import time
+import json
 import glob
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-import config
+from groq import Groq
+from dotenv import load_dotenv
+load_dotenv()
 
 # Data classes
 
@@ -119,8 +124,282 @@ def _geocode(text: str, api_key: str) -> Optional[str]:
     _geo_cache[key] = result
     _save_geo_cache(_geo_cache)
     return result
- 
- 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Transaction enrichment (run at index time, results cached to disk)
+# ─────────────────────────────────────────────────────────────────────────────
+
+_TXN_ENRICH_CACHE_PATH = Path(__file__).parent / "txn_enrich_cache.json"
+
+
+def _load_enrich_cache() -> dict:
+    if _TXN_ENRICH_CACHE_PATH.exists():
+        with open(_TXN_ENRICH_CACHE_PATH, encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+
+def _save_enrich_cache(cache: dict) -> None:
+    with open(_TXN_ENRICH_CACHE_PATH, "w", encoding="utf-8") as f:
+        json.dump(cache, f, indent=2, ensure_ascii=False)
+
+
+def _rule_infer_category(payee: str, description: str, address: str = "") -> str:
+    """
+    Fast rule-based category inference from payee/description/address.
+    Mirrors the logic in nodes.py but applied at index time so the category
+    is embedded into the text chunk rather than inferred at query time.
+    """
+    _CATEGORY_RULES: list[tuple[str, list[str]]] = [
+        ("accommodation", [
+            "hotel", "hostel", "airbnb", "booking.com", "hotels.com", "inn",
+            "lodge", "resort", "motel", "guesthouse", "bnb", "b&b", "suites",
+        ]),
+        ("flights", [
+            "ryanair", "easyjet", "british airways", "lufthansa", "emirates",
+            "cathay", "qantas", "delta", "united", "southwest", "air france",
+            "klm", "wizz", "jet2", "airport", "airways",
+        ]),
+        ("transport", [
+            "uber", "lyft", "bolt", "grab", "taxi", "cab", "tfl", "oyster",
+            "trainline", "national rail", "eurostar", "bus", "metro", "tube",
+            "rail", "ferry", "tram", "mtr",
+        ]),
+        ("food & drink", [
+            "restaurant", "cafe", "coffee", "starbucks", "costa", "pret",
+            "mcdonald", "kfc", "subway", "nandos", "wagamama", "itsu",
+            "food", "dining", "bistro", "pub", "bar", "bakery", "sushi",
+            "pizza", "burger", "ramen", "noodle", "curry", "dim sum",
+            "deliveroo", "uber eats", "just eat",
+        ]),
+        ("groceries", [
+            "supermarket", "tesco", "sainsbury", "waitrose", "m&s", "asda",
+            "morrisons", "lidl", "aldi", "co-op", "whole foods", "carrefour",
+        ]),
+        ("activities & attractions", [
+            "museum", "gallery", "tour", "tickets", "admission", "zoo",
+            "aquarium", "theme park", "cinema", "theatre", "concert",
+        ]),
+        ("shopping", [
+            "amazon", "ebay", "asos", "zara", "h&m", "primark", "pharmacy",
+            "boots", "duty free", "souvenir", "gift shop", "mall",
+        ]),
+        ("cash withdrawal", ["atm", "cash", "withdrawal", "cashpoint"]),
+    ]
+    haystack = " ".join([payee, description, address]).lower()
+    for category, keywords in _CATEGORY_RULES:
+        if any(kw in haystack for kw in keywords):
+            return category
+    return ""
+
+def _apply_cache(chunks: list[TextChunk], cache: dict) -> None:
+    """Apply cached enrichment results to chunk text and metadata."""
+    import re
+    for chunk in chunks:
+        txn_id = chunk.extra.get("transaction_id") or chunk.doc_id
+        result = cache.get(txn_id)
+        if not result:
+            continue
+        city     = result.get("inferred_city")
+        activity = result.get("inferred_activity")
+        if city and not chunk.destination:
+            chunk.destination = city
+            chunk.extra["inferred_city"] = city
+        if activity:
+            chunk.extra["inferred_activity"] = activity
+            # Don't double-append if already present
+            if "[activity:" not in chunk.text:
+                chunk.text += f" [activity: {activity}]"
+        if city and f"[city: {city}]" not in chunk.text:
+            chunk.text += f" [city: {city}]"
+
+def enrich_transactions_llm(
+    chunks: list[TextChunk],
+    batch_size: int = 30,
+) -> list[TextChunk]:
+
+    if not chunks:
+        return chunks
+
+    # ── Pass 1: rule-based ─────────────────────────────────────────────
+    for chunk in chunks:
+        category = _rule_infer_category(
+            chunk.extra.get("payee", ""),
+            chunk.extra.get("description", ""),
+            chunk.extra.get("address", ""),
+        )
+        if category:
+            chunk.extra["inferred_category"] = category
+            chunk.text += f" [category: {category}]"
+
+    # ── API key check ──────────────────────────────────────────────────
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        print("[chunker] No GROQ_API_KEY — skipping LLM enrichment")
+        return chunks
+
+    # ── Model fallback chain ───────────────────────────────────────────
+    MODEL_CHAIN = [
+        "llama-3.3-70b-versatile",
+        "qwen/qwen3-32b",
+        "meta-llama/llama-4-scout-17b-16e-instruct",
+        "openai/gpt-oss-20b",
+        "llama-3.1-8b-instant",
+    ]
+
+    model_index = 0
+
+    cache = _load_enrich_cache()
+
+    # ── Filter uncached transactions ───────────────────────────────────
+    to_enrich = []
+    for chunk in chunks:
+        txn_id = chunk.extra.get("transaction_id") or chunk.doc_id
+        if txn_id not in cache:
+            to_enrich.append(chunk)
+
+    if not to_enrich:
+        print(f"[chunker] All {len(chunks)} transactions cached")
+        _apply_cache(chunks, cache)
+        return chunks
+
+    print(f"[chunker] {len(to_enrich)} transactions to enrich")
+
+    client = Groq(api_key=api_key)
+
+    # ── Rate limiting ──────────────────────────────────────────────────
+    REQUESTS_PER_MIN = 30
+    SAFETY_MARGIN = 0.8
+    sleep_per_request = 60 / (REQUESTS_PER_MIN * SAFETY_MARGIN)  # ~2.5s
+
+    _ENRICH_SYSTEM = """You are enriching bank transaction records.
+
+Return ONLY valid JSON (no markdown).
+
+Each item:
+{
+"id": "...",
+"inferred_city": "... or null",
+"inferred_activity": "3-6 word activity or null"
+}
+
+Rules:
+- Use only evidence from payee, description, address
+- If global brand → city = null
+- Keep activity concise (3-6 words)
+- If unsure → null
+
+Return a JSON array in the same order.
+"""
+
+    enriched_count = 0
+
+    # ── Batch loop ─────────────────────────────────────────────────────
+    for i in range(0, len(to_enrich), batch_size):
+        batch = to_enrich[i : i + batch_size]
+
+        payload = [
+            {
+                "id": chunk.extra.get("transaction_id") or chunk.doc_id,
+                "payee": chunk.extra.get("payee", ""),
+                "description": chunk.extra.get("description", ""),
+                "amount": chunk.extra.get("amount", ""),
+                "address": chunk.extra.get("address", ""),
+                "date": chunk.date or "",
+            }
+            for chunk in batch
+        ]
+
+        success = False
+        rpm_retries = 0
+
+        # ── Model fallback loop ────────────────────────────────────────
+        while model_index < len(MODEL_CHAIN):
+            current_model = MODEL_CHAIN[model_index]
+
+            try:
+                response = client.chat.completions.create(
+                    model=current_model,
+                    messages=[
+                        {"role": "system", "content": _ENRICH_SYSTEM},
+                        {"role": "user", "content": json.dumps(payload)},
+                    ],
+                    temperature=0,
+                )
+
+                raw = response.choices[0].message.content
+                raw = re.sub(r"```(?:json)?", "", raw).strip().rstrip("```")
+
+                # ── JSON parsing with recovery ───────────────────────
+                try:
+                    items = json.loads(raw)
+                except:
+                    match = re.search(r"\[.*\]", raw, re.DOTALL)
+                    if match:
+                        items = json.loads(match.group(0))
+                    else:
+                        raise ValueError("JSON parse failed")
+
+                for item in items:
+                    txn_id = item.get("id")
+                    if txn_id:
+                        cache[txn_id] = {
+                            "inferred_city": item.get("inferred_city"),
+                            "inferred_activity": item.get("inferred_activity"),
+                        }
+                        enriched_count += 1
+
+                success = True
+                break
+
+            except Exception as e:
+                error_str = str(e)
+
+                # 🔴 Token limit → switch model permanently
+                if "rate_limit_exceeded" in error_str and "tokens" in error_str:
+                    print(f"[chunker] {current_model} TPD exhausted → switching model")
+                    model_index += 1
+                    rpm_retries = 0
+                    continue
+
+                # 🟡 RPM limit → retry SAME model
+                elif "429" in error_str:
+                    rpm_retries += 1
+                    if rpm_retries > 3:
+                        print(f"[chunker] {current_model} stuck on RPM → switching model")
+                        model_index += 1
+                        rpm_retries = 0
+                        continue
+
+                    print(f"[chunker] {current_model} RPM hit → sleeping 15s")
+                    time.sleep(15)
+                    continue
+
+                # 🔵 Other error → skip model
+                else:
+                    print(f"[chunker] {current_model} failed → switching model ({e})")
+                    model_index += 1
+                    rpm_retries = 0
+                    continue
+
+        if not success:
+            print("[chunker] All models exhausted — stopping early")
+            break
+
+        print(f"[chunker] {min(i + batch_size, len(to_enrich))}/{len(to_enrich)} processed")
+
+        # ── Rate limiting between batches ──────────────────────────────
+        if i + batch_size < len(to_enrich):
+            time.sleep(sleep_per_request)
+
+    # ── Save + apply cache ─────────────────────────────────────────────
+    _save_enrich_cache(cache)
+    _apply_cache(chunks, cache)
+
+    print(f"[chunker] Done — {enriched_count} enriched")
+    return chunks
+
+
 def _infer_destination(text: str, api_key: Optional[str] = None) -> Optional[str]:
     """
     Infer a destination city/country from an unstructured string (e.g. a
@@ -446,6 +725,12 @@ def build_all_chunks(
     all_text += photo_text
 
     print(f"[chunker] Done. {len(all_text)} text chunks, {len(image_records)} image records.")
+
+    print("[chunker] Enriching transactions...")
+    txn_chunks = chunk_transactions_csv(transactions_csv)
+    txn_chunks = enrich_transactions_llm(txn_chunks)   # ← add this
+    all_text += txn_chunks
+    
     return all_text, image_records
 
 

@@ -1,0 +1,185 @@
+{
+  "Q1": {
+    "ground_truth_ids": [],
+    "candidates": [],
+    "note": "no results found \u2014 check query/filters"
+  },
+  "Q2": {
+    "ground_truth_ids": [
+      "txn_663655f4-7d0b-4824-ab0e-19ca65fd2bcc"
+    ],
+    "candidates": [
+      {
+        "id": "txn_663655f4-7d0b-4824-ab0e-19ca65fd2bcc",
+        "source_type": "transaction",
+        "destination": "Tokyo",
+        "date": "2025-12-19",
+        "preview": "On 2025-12-19T11:58:30+00:00 debit of 1.95 at S-PERIA INN NIHOMBASHI, TOKYO (Holidays & Travel) at TOKYO [Up Bank]"
+      },
+      {
+        "id": "txn_93b5b020-112b-4e97-8f48-d5908328c463",
+        "source_type": "transaction",
+        "destination": "Tokyo",
+        "date": "2025-12-22",
+        "preview": "On 2025-12-22T05:26:25+00:00 debit of 31.14 at TEA HOUSE HAPPA, TOKYO (Takeaway) at TOKYO [Up Bank]"
+      },
+      {
+        "id": "txn_3034fb44-fc60-4502-92f4-171aa8bb996f",
+        "source_type": "transaction",
+        "destination": "Tokyo",
+        "date": "2025-12-22",
+        "preview": "On 2025-12-22T11:21:55+00:00 debit of 5.75 at 7-Eleven \u2014 SEVEN-ELEVEN, TOKYO (Groceries) at TOKYO [Up Bank]"
+      },
+      {
+        "id": "txn_c8910849-191d-4797-ae45-6f7c3e4a4c29",
+        "source_type": "transaction",
+        "destination": "Tokyo",
+        "date": "2025-12-21",
+        "preview": "On 2025-12-21T03:18:47+00:00 debit of 29.19 at Ichiran \u2014 ICHIRANSHIMOKITAZAWATE, TOKYO (Restaurants & Cafes) at TOKYO [U"
+      },
+      {
+        "id": "txn_26b568e5-eea5-4be6-918d-ad1585f98ce9",
+        "source_type": "transaction",
+        "destination": "Tokyo",
+        "date": "2025-12-19",
+        "preview": "On 2025-12-19T13:31:40+00:00 debit of 7.18 at FamilyMart \u2014 FAMILYMART, TOKYO (Groceries) at TOKYO [Up Bank]"
+      }
+    ],
+    "note": "auto-generated from top-5 results for: hotel accommodation Tokyo"
+  },
+  "Q3": {
+    "ground_truth_ids": [
+      "txn_5b975cf5-dba9-4264-aa43-14b39122baa9",
+      "txn_5d540925-67ba-4084-9b04-92551f5a5c1b"
+    ],
+    "candidates": [
+      {
+        "id": "txn_5b975cf5-dba9-4264-aa43-14b39122baa9",
+        "source_type": "transaction",
+        "destination": "Copenhagen",
+        "date": "2025-11-19",
+        "preview": "On 2025-11-19T14:18:05+00:00 debit of 21.89 at Zeleste \u2014 Zettle_*Danish Souv,Copenhagen (Restaurants & Cafes) at Copenha"
+      },
+      {
+        "id": "txn_5d540925-67ba-4084-9b04-92551f5a5c1b",
+        "source_type": "transaction",
+        "destination": "Copenhagen",
+        "date": "2025-11-21",
+        "preview": "On 2025-11-21T19:19:10+00:00 debit of 22.8 at GARBANZO APS, KXBENHAVN (Takeaway) at KXBENHAVN [Up Bank]"
+      }
+    ],
+    "note": "auto-generated from top-2 results for: Copenhagen trip dates"
+  },
+  "Q4": {
+    "ground_truth_ids": [],
+    "candidates": [],
+    "note": "no results found \u2014 check query/filters"
+  },
+  "Q5": {
+    "ground_truth_ids": [
+      "1e32d64e-8ed4-4463-8c2a-21805b56a3af"
+    ],
+    "candidates": [
+      {
+        "id": "1e32d64e-8ed4-4463-8c2a-21805b56a3af",
+        "source_type": "photo_caption",
+        "destination": "City of Westminster",
+        "date": "2025-07-19",
+        "preview": "The image shows a young woman sitting at a table in what appears to be an indoor setting with a restaurant-like ambiance"
+      },
+      {
+        "id": "map_ChIJs7KGJoF1nkcRbvHy7HEBKiU",
+        "source_type": "map",
+        "destination": "Germany",
+        "date": null,
+        "preview": "Viktualienmarkt located at Viktualienmarkt 3, 80331 M\u00fcnchen, Germany [farmers_market, market, point_of_interest, establi"
+      },
+      {
+        "id": "fe1c1c33-9e28-4bd1-9f7b-6ce56722ccf3",
+        "source_type": "photo_caption",
+        "destination": "Amsterdam",
+        "date": "2026-02-21",
+        "preview": "The image shows a person holding up a plate of food in front of an indoor market with various food items on display. The"
+      },
+      {
+        "id": "a6e68b6e-4b99-4bfe-a2c0-74c16a0b8fdf",
+        "source_type": "photo",
+        "destination": null,
+        "date": null,
+        "preview": "./data/raw/photos\\a6e68b6e-4b99-4bfe-a2c0-74c16a0b8fdf.jpg"
+      },
+      {
+        "id": "3b7eaab8-3715-4013-9c18-417ea7bf9cef",
+        "source_type": "photo_caption",
+        "destination": null,
+        "date": "2026-01-23",
+        "preview": "The image shows a table with various food items on it, including a bowl of soup, a plate of food, and several skewers of"
+      }
+    ],
+    "note": "auto-generated from top-5 results for: night market eating food"
+  },
+  "Q6": {
+    "ground_truth_ids": [
+      "311410cc-138e-4764-bb6c-0209c263a454",
+      "txn_ee1e9895-8f23-4ad7-9915-024a12fac56e"
+    ],
+    "candidates": [
+      {
+        "id": "311410cc-138e-4764-bb6c-0209c263a454",
+        "source_type": "photo_caption",
+        "destination": null,
+        "date": "2025-11-18",
+        "preview": "The image shows a dining table with two plates of food on it. One plate contains fried noodles and meat, while the other"
+      },
+      {
+        "id": "txn_ee1e9895-8f23-4ad7-9915-024a12fac56e",
+        "source_type": "transaction",
+        "destination": null,
+        "date": "2025-12-21",
+        "preview": "On 2025-12-21T13:16:36+00:00 credit of 36 at ROHAN KOLLAMBALATH \u2014 Dinner [Up Bank]"
+      },
+      {
+        "id": "a24a2587-ae48-4871-be66-cb3c5c74fad7",
+        "source_type": "photo",
+        "destination": "Ashland",
+        "date": null,
+        "preview": "./data/raw/photos\\a24a2587-ae48-4871-be66-cb3c5c74fad7.jpg"
+      },
+      {
+        "id": "bdbfbb30-3c79-411f-966c-e4812a1834fb",
+        "source_type": "photo_caption",
+        "destination": "Bologna",
+        "date": "2025-08-17",
+        "preview": "The image shows a dining table with four white plates containing different types of food arranged on it. There are also "
+      },
+      {
+        "id": "map_ChIJ4dQg1DrzT0YRohg_7vqGzRY",
+        "source_type": "map",
+        "destination": "Sweden",
+        "date": null,
+        "preview": "Linn\u00e9staden located at Linn\u00e9staden, 413 04 G\u00f6teborg, Sweden [sublocality_level_2, sublocality, political] Note: dinner"
+      }
+    ],
+    "note": "auto-generated from top-5 results for: dinner restaurant expensive meal"
+  },
+  "Q7": {
+    "ground_truth_ids": [],
+    "note": "multi-hop \u2014 judge only"
+  },
+  "Q8": {
+    "ground_truth_ids": [],
+    "note": "multi-hop \u2014 judge only"
+  },
+  "Q9": {
+    "ground_truth_ids": [],
+    "note": "conversational \u2014 judge only"
+  },
+  "Q10": {
+    "ground_truth_ids": [],
+    "note": "conversational \u2014 judge only"
+  },
+  "Q11": {
+    "ground_truth_ids": [],
+    "note": "conversational \u2014 judge only"
+  }
+}

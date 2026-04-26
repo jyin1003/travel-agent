@@ -1,0 +1,2398 @@
+{
+  "32308698205760998083889476501088": {
+    "inferred_city": "London",
+    "inferred_activity": "Mobile payment"
+  },
+  "32308737944534042636132404783024": {
+    "inferred_city": null,
+    "inferred_activity": "Online shopping"
+  },
+  "32312131767835220975140701568705": {
+    "inferred_city": "London",
+    "inferred_activity": "Transport ticket"
+  },
+  "32312334765290941721316880455496": {
+    "inferred_city": "London",
+    "inferred_activity": "Retail shopping"
+  },
+  "32312353154532156562385414830466": {
+    "inferred_city": "London",
+    "inferred_activity": "Grocery shopping"
+  },
+  "32312396654782038062295025408513": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "32312399767623911438630806779632": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "32312525816439540197164930420047": {
+    "inferred_city": "London",
+    "inferred_activity": "Grocery shopping"
+  },
+  "32326374994052050618255508499794": {
+    "inferred_city": "London",
+    "inferred_activity": "Food purchase"
+  },
+  "32326414265941710917400940366241": {
+    "inferred_city": "London",
+    "inferred_activity": "Grocery shopping"
+  },
+  "32326455294510575919139727981973": {
+    "inferred_city": "London",
+    "inferred_activity": "Grocery shopping"
+  },
+  "32326563679339239238310439960827": {
+    "inferred_city": "London",
+    "inferred_activity": "Grocery shopping"
+  },
+  "32327236895048328435042485157962": {
+    "inferred_city": "London",
+    "inferred_activity": "Transport payment"
+  },
+  "32328459216223972847067070736118": {
+    "inferred_city": null,
+    "inferred_activity": "Train ticket"
+  },
+  "32328499999642836047248599922391": {
+    "inferred_city": "London",
+    "inferred_activity": "Railcard purchase"
+  },
+  "32328519014109319328585140986865": {
+    "inferred_city": "Edinburgh",
+    "inferred_activity": null
+  },
+  "32328904757778548856636748783107": {
+    "inferred_city": "London",
+    "inferred_activity": "Transport payment"
+  },
+  "32329377182956328224060406009651": {
+    "inferred_city": "London",
+    "inferred_activity": "Food purchase"
+  },
+  "32329423296686752535936128042524": {
+    "inferred_city": "London",
+    "inferred_activity": "Food purchase"
+  },
+  "32330527941648934166427675146136": {
+    "inferred_city": "London",
+    "inferred_activity": "Transport payment"
+  },
+  "32332126651529775179946524191371": {
+    "inferred_city": "London",
+    "inferred_activity": "Transport payment"
+  },
+  "32332934624322730320586454294953": {
+    "inferred_city": "London",
+    "inferred_activity": "Theater ticket"
+  },
+  "32333186138861649707730235151273": {
+    "inferred_city": null,
+    "inferred_activity": "Food delivery"
+  },
+  "32333189147280013094343935059405": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "32333826507797421703432331454062": {
+    "inferred_city": "London",
+    "inferred_activity": "Transport payment"
+  },
+  "32334130895126297217695310672668": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "32334696310845852389210720965934": {
+    "inferred_city": "London",
+    "inferred_activity": "Restaurant visit"
+  },
+  "32334697872546924255197769431571": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "32334706566859729875651909683442": {
+    "inferred_city": "London",
+    "inferred_activity": "Food purchase"
+  },
+  "32334768643529082251152590437335": {
+    "inferred_city": "London",
+    "inferred_activity": "Food purchase"
+  },
+  "32334811533324239810629961688978": {
+    "inferred_city": "London",
+    "inferred_activity": "Personal Payment"
+  },
+  "32334811983722198084640374408961": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery Shopping"
+  },
+  "32334845700996486946516944450066": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery Shopping"
+  },
+  "32335291218947454810816407864384": {
+    "inferred_city": null,
+    "inferred_activity": "Transportation"
+  },
+  "32335636885053536814457167058073": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "32335679993121677429680785998740": {
+    "inferred_city": null,
+    "inferred_activity": "Shopping"
+  },
+  "32335807944843857467710254213973": {
+    "inferred_city": null,
+    "inferred_activity": "Dining Out"
+  },
+  "32335891093908794416161550609258": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery Shopping"
+  },
+  "32336811172071787742758672834405": {
+    "inferred_city": null,
+    "inferred_activity": "Transportation"
+  },
+  "32337354799331365266117005722903": {
+    "inferred_city": "London",
+    "inferred_activity": "Business Payment"
+  },
+  "32337414442208267840856432703031": {
+    "inferred_city": "London",
+    "inferred_activity": "Dining Out"
+  },
+  "32337426708113434661290553963176": {
+    "inferred_city": "London",
+    "inferred_activity": "Dining Out"
+  },
+  "32337542918487745526587155667694": {
+    "inferred_city": null,
+    "inferred_activity": "Dining Out"
+  },
+  "32337730059042711318411141350035": {
+    "inferred_city": "London",
+    "inferred_activity": "Dining Out"
+  },
+  "32337745955298316710018224673585": {
+    "inferred_city": "London",
+    "inferred_activity": "Dining Out"
+  },
+  "32337771766352433625670907211864": {
+    "inferred_city": "London",
+    "inferred_activity": "Food Purchase"
+  },
+  "32337792772631427903012374381050": {
+    "inferred_city": "London",
+    "inferred_activity": "Food Purchase"
+  },
+  "32337825759279079266172824755655": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery Shopping"
+  },
+  "32338341365330349742258870159418": {
+    "inferred_city": null,
+    "inferred_activity": "Transportation"
+  },
+  "tx_0000AwLsdQsupGmUNfjjdJ": {
+    "inferred_city": "London",
+    "inferred_activity": "Personal Payment"
+  },
+  "tx_0000AwLtANQAiz96w6XbUH": {
+    "inferred_city": "London",
+    "inferred_activity": "Transportation"
+  },
+  "tx_0000AwLtARnMSiMTZmmR4z": {
+    "inferred_city": "London",
+    "inferred_activity": null
+  },
+  "tx_0000AwMmVSjFgFetm1mJcn": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery Shopping"
+  },
+  "tx_0000AwMvFalYvhfhgxiyiP": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000AwOF9oZ6u8AuqvF7Hl": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery Shopping"
+  },
+  "tx_0000AwOzOlAEQc5rVRKvPW": {
+    "inferred_city": null,
+    "inferred_activity": "Dining Out"
+  },
+  "tx_0000AwP1YC3C2B2oPCnV3p": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery Shopping"
+  },
+  "tx_0000AwRAauUl357pde6MOh": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery Shopping"
+  },
+  "tx_0000AwSRR8IKmR1rh276Ar": {
+    "inferred_city": null,
+    "inferred_activity": "Online Shopping"
+  },
+  "tx_0000AwSSPGGoFyqK0SgsNe": {
+    "inferred_city": null,
+    "inferred_activity": "Online Shopping"
+  },
+  "tx_0000AwSSpyp7ENOS7GDqQj": {
+    "inferred_city": "London",
+    "inferred_activity": "Financial Services"
+  },
+  "tx_0000AwTDJvAnxkPdTkzVrN": {
+    "inferred_city": null,
+    "inferred_activity": "Online Shopping"
+  },
+  "tx_0000AwV7wJO0B2WWHhfur3": {
+    "inferred_city": "London",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AwWiRfwW9Xy7WCCtCU": {
+    "inferred_city": "Edinburgh",
+    "inferred_activity": "Transportation"
+  },
+  "tx_0000AwWwoMPcKf8Vc69NEf": {
+    "inferred_city": "Edinburgh",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AwXB4TfWWDtlFsQKFV": {
+    "inferred_city": "Edinburgh",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AwYPu1L0grT68E0tgP": {
+    "inferred_city": "Edinburgh",
+    "inferred_activity": "Transportation"
+  },
+  "tx_0000AwYiG5UxhUn8JK0P11": {
+    "inferred_city": "Edinburgh",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AwYmC4pCf8nWCIC5HF": {
+    "inferred_city": null,
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AwYtjQfr9E19X7sgSn": {
+    "inferred_city": "Edinburgh",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AwZ3h3yJaBNBwaKBPd": {
+    "inferred_city": "London",
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000AwZ7GmEvHrjFM2bGYD": {
+    "inferred_city": "Edinburgh",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AwZc6T0B3Ukh3lyOTh": {
+    "inferred_city": "London",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AwbC4J2wtBBVLgPN4s": {
+    "inferred_city": "London",
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000AwbD0pxQgW1VDiwGkD": {
+    "inferred_city": "London",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000Awbwxpv4xt8CKUn5nu": {
+    "inferred_city": null,
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000Awco61LRfJ6l6PwfuE": {
+    "inferred_city": "London",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AwcpXCba0XWgasBmoV": {
+    "inferred_city": "London",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000Awes6wDV0NpdlrOkcd": {
+    "inferred_city": "London",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AwfVjw3LRc1fWmqX5e": {
+    "inferred_city": "London",
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000AwfWGp3sSXK587VtA1": {
+    "inferred_city": "London",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AwfiiTZd8vEfcDnm66": {
+    "inferred_city": "London",
+    "inferred_activity": "Accommodation"
+  },
+  "tx_0000AwfipITCpAnldPZ80A": {
+    "inferred_city": null,
+    "inferred_activity": "Transportation"
+  },
+  "tx_0000AwfjTwpgB1UwkPLALR": {
+    "inferred_city": null,
+    "inferred_activity": "Travel"
+  },
+  "tx_0000AwgoSHkU8LXIxCy7xR": {
+    "inferred_city": "London",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AwgomHWWgFO2Cohmxm": {
+    "inferred_city": "London",
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000AwjHyG3pEOqcv3u8rz": {
+    "inferred_city": "London",
+    "inferred_activity": "Mobile Services"
+  },
+  "tx_0000AwjKZsPZo4Idj7icTp": {
+    "inferred_city": "London",
+    "inferred_activity": "Mobile Services"
+  },
+  "tx_0000AwkzE2QcArKxvTaMQD": {
+    "inferred_city": "London",
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000Awl0OmQu5KJkrFZpWz": {
+    "inferred_city": "London",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AwlYkl51BzyD3sLwEU": {
+    "inferred_city": "London",
+    "inferred_activity": "Public Transport"
+  },
+  "tx_0000Awn4n1xMoBGN6NmfIH": {
+    "inferred_city": null,
+    "inferred_activity": "Charity Donation"
+  },
+  "tx_0000AwnAiHGR4Dv5Ndcdog": {
+    "inferred_city": "London",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AwniAucVdICA7qq0iP": {
+    "inferred_city": "London",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000Awp8jtmDYIlnxnv8Xx": {
+    "inferred_city": "London",
+    "inferred_activity": "Grocery Shopping"
+  },
+  "tx_0000AwrMh1vcZkqNawrTox": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery Shopping"
+  },
+  "tx_0000Awrl8UsVRm04eFFO0h": {
+    "inferred_city": "London",
+    "inferred_activity": "Dessert Purchase"
+  },
+  "tx_0000AwtPCpd6QSQxRrlIZ8": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery Shopping"
+  },
+  "tx_0000AwtqCDO9IqYqx9BdZJ": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000AwttSuAAKtN5w5yTJ6": {
+    "inferred_city": "London",
+    "inferred_activity": "Grocery Shopping"
+  },
+  "tx_0000AwtumZbAbUOGny8kWf": {
+    "inferred_city": "London",
+    "inferred_activity": "Transportation"
+  },
+  "tx_0000AwxgBF15Xgu51IzOHh": {
+    "inferred_city": "London",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000Awxsjgly3EQCuehsGY": {
+    "inferred_city": "London",
+    "inferred_activity": "Event Ticket"
+  },
+  "tx_0000AwxxbNNalojv6WwrjN": {
+    "inferred_city": "London",
+    "inferred_activity": "Grocery Shopping"
+  },
+  "tx_0000Awy7MRhXQ2ZO5BZcC9": {
+    "inferred_city": "London",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AwyBER7u4VHTStqPZJ": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery Shopping"
+  },
+  "tx_0000AwyDZSwSiViZ6p2Scz": {
+    "inferred_city": "London",
+    "inferred_activity": "Grocery Shopping"
+  },
+  "tx_0000AwzGo7RZQHstMSnoKf": {
+    "inferred_city": null,
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AwzO8buwX0NLCaUHTd": {
+    "inferred_city": "London",
+    "inferred_activity": null
+  },
+  "tx_0000AwzPpksBD8WHWf6USY": {
+    "inferred_city": "London",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000Awzg2t8XObWhhQbR33": {
+    "inferred_city": "London",
+    "inferred_activity": "Dining Out"
+  },
+  "tx_0000AwzkxvvM6YwUhKgQIj": {
+    "inferred_city": "London",
+    "inferred_activity": null
+  },
+  "tx_0000Ax0g26FNMRb5c20ony": {
+    "inferred_city": "London",
+    "inferred_activity": null
+  },
+  "tx_0000Ax1kJLbQ7HmBb2h0Cn": {
+    "inferred_city": "London",
+    "inferred_activity": "Pharmacy Purchase"
+  },
+  "tx_0000Ax1kVeO06bVoCd9euf": {
+    "inferred_city": "London",
+    "inferred_activity": "Grocery Shopping"
+  },
+  "tx_0000Ax2EO9DGbb3q7HhPPv": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000Ax46gOArJAJ335hfMo": {
+    "inferred_city": "London",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000Ax47KvnNixNKPaG2zK": {
+    "inferred_city": "London",
+    "inferred_activity": "Grocery Shopping"
+  },
+  "tx_0000Ax5RAfNA7b6yUJXgSg": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000Ax5hf6ytdWgVINhn2f": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery Shopping"
+  },
+  "tx_0000Ax5hwRUwbmUndAvcbx": {
+    "inferred_city": "London",
+    "inferred_activity": "Bakery Purchase"
+  },
+  "tx_0000Ax6KZ0VagYdybJqDYX": {
+    "inferred_city": "London",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000Ax6V7ZxoMwkxrok9fW": {
+    "inferred_city": "London",
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000Ax7nIr8opvOIMhufyc": {
+    "inferred_city": "London",
+    "inferred_activity": "Grocery Shopping"
+  },
+  "tx_0000Ax8jX9laBDXXulGkCp": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery Shopping"
+  },
+  "tx_0000Ax8qYAdf7bY27Jrkbh": {
+    "inferred_city": "London",
+    "inferred_activity": "Transportation"
+  },
+  "tx_0000AxAr97XQ09NdUWNdJ3": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000AxBonktuxtlhvBEAxl": {
+    "inferred_city": "Milan",
+    "inferred_activity": "ATM Withdrawal"
+  },
+  "tx_0000AxBqvM0PbmwyFygzMf": {
+    "inferred_city": null,
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AxC0xUbza6hYHZLxB3": {
+    "inferred_city": null,
+    "inferred_activity": "Restaurant Purchase"
+  },
+  "tx_0000AxC2W6ASYVcEPheaNF": {
+    "inferred_city": "Ancona",
+    "inferred_activity": "Grocery Shopping"
+  },
+  "tx_0000AxC3RzMc0iHaTCacKI": {
+    "inferred_city": null,
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AxC7O4NZovhYd2oSG2": {
+    "inferred_city": null,
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AxCLLLp7uBOiCWuIrZ": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery Shopping"
+  },
+  "tx_0000AxCNquSxM5tlczbyan": {
+    "inferred_city": null,
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AxCOsJR66QWiQSjc1M": {
+    "inferred_city": null,
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AxCZUCYX87rYdSfVC5": {
+    "inferred_city": "Milan",
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000AxCb7bOIpOp3lcoNYw": {
+    "inferred_city": "Milan",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AxCtvSJcdvRokwBkqf": {
+    "inferred_city": null,
+    "inferred_activity": "Transportation"
+  },
+  "tx_0000AxDfcyGsP4x6J6nlJq": {
+    "inferred_city": "Varenna",
+    "inferred_activity": "Transportation"
+  },
+  "tx_0000AxDjMYYidIQtbnvh7z": {
+    "inferred_city": null,
+    "inferred_activity": "Cultural Event"
+  },
+  "tx_0000AxDt2n5NuaeJ7ZaLmT": {
+    "inferred_city": null,
+    "inferred_activity": "Bakery Purchase"
+  },
+  "tx_0000AxE1jfcuJw6HYpog2z": {
+    "inferred_city": "Milan",
+    "inferred_activity": "Wine Purchase"
+  },
+  "tx_0000AxEQ58fFx1jp725inR": {
+    "inferred_city": "Milan",
+    "inferred_activity": "Food Purchase"
+  },
+  "tx_0000AxEW2AMZmJYZdBKVpx": {
+    "inferred_city": null,
+    "inferred_activity": "Gelato Purchase"
+  },
+  "tx_0000AxEhMIHR9SScubpOE5": {
+    "inferred_city": "Milan",
+    "inferred_activity": "ATM Withdrawal"
+  },
+  "tx_0000AxFliwp5glvX5N8mWq": {
+    "inferred_city": null,
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000AxGCm9QPzMRlnkLtaL": {
+    "inferred_city": null,
+    "inferred_activity": "Dairy Purchase"
+  },
+  "tx_0000AxGNKowl7MgOl8dn3R": {
+    "inferred_city": null,
+    "inferred_activity": "Fuel Purchase"
+  },
+  "tx_0000AxGNNSm80VLlhnDjFZ": {
+    "inferred_city": null,
+    "inferred_activity": "Fuel Purchase"
+  },
+  "tx_0000AxGNhm3i1MlQSlpvwv": {
+    "inferred_city": "Milan",
+    "inferred_activity": "Fuel purchase"
+  },
+  "tx_0000AxGZvU8edy8HaxSmRd": {
+    "inferred_city": "Florence",
+    "inferred_activity": "Clothing purchase"
+  },
+  "tx_0000AxH2zbwsRfn3Bgyq2L": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000AxHwGMHlQdAM3qCOuH": {
+    "inferred_city": null,
+    "inferred_activity": "Food delivery"
+  },
+  "tx_0000AxHxG7z4hW7zOQI7Kz": {
+    "inferred_city": null,
+    "inferred_activity": "Transportation"
+  },
+  "32383416191508785601680287434699": {
+    "inferred_city": "London",
+    "inferred_activity": "Train ticket"
+  },
+  "tx_0000AxILySYjxgRkDpujAH": {
+    "inferred_city": "Rome",
+    "inferred_activity": "Dining out"
+  },
+  "tx_0000AxIQ03fXsDjJNKsN2v": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000AxIR9Gep3JqW4mU7Ht": {
+    "inferred_city": null,
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000AxIfhLMtRVzQgtuhaj": {
+    "inferred_city": "Milan",
+    "inferred_activity": "Fast food"
+  },
+  "tx_0000AxIh1BZ3hcW6E9vl35": {
+    "inferred_city": null,
+    "inferred_activity": "Bakery purchase"
+  },
+  "tx_0000AxIi5X6begPYVgR8CH": {
+    "inferred_city": "Milan",
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000AxIpp9AJhBbxowagmw": {
+    "inferred_city": null,
+    "inferred_activity": "Fast food"
+  },
+  "tx_0000AxJNDYAhfhR3hBocct": {
+    "inferred_city": "London",
+    "inferred_activity": "Ride hailing"
+  },
+  "tx_0000AxKGOFFfqmpxnP84lV": {
+    "inferred_city": "London",
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000AxKI1amXpr56sNoWxO": {
+    "inferred_city": "London",
+    "inferred_activity": "Pharmacy purchase"
+  },
+  "tx_0000AxKnrHu2MzHyPCJzAP": {
+    "inferred_city": "London",
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000AxKpHRu1ufmUMT4hBz": {
+    "inferred_city": "London",
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000AxKqlyO9nNwCOG06ao": {
+    "inferred_city": "London",
+    "inferred_activity": "Public transport"
+  },
+  "32385597095395174796823152851477": {
+    "inferred_city": "London",
+    "inferred_activity": null
+  },
+  "tx_0000AxMMWcOsem5rCc01tC": {
+    "inferred_city": "London",
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000AxMrTer6AYpL9gbiwj": {
+    "inferred_city": "London",
+    "inferred_activity": "Grocery shopping"
+  },
+  "32387224616529143832156493242131": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000AxOMd0EXLaBwnqaowj": {
+    "inferred_city": "London",
+    "inferred_activity": "Pharmacy purchase"
+  },
+  "tx_0000AxOPN4hrFU4mydzyrq": {
+    "inferred_city": "London",
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000AxPVfL0MBUH8IcWo2V": {
+    "inferred_city": null,
+    "inferred_activity": "Flight booking"
+  },
+  "tx_0000AxPVsIiQ0W1FbGxS3G": {
+    "inferred_city": null,
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000AxQQT7cJpPt6hcqpeb": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000AxQWRU4xwYLxSCXhr8": {
+    "inferred_city": "London",
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000AxQXQSLezboYnXqhMn": {
+    "inferred_city": "London",
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000AxQYKmPHbSQWi1EM2E": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000AxQYYO5GpapN8Y8qXK": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000AxR9OhOfrsWYNixHsY": {
+    "inferred_city": null,
+    "inferred_activity": "Jewelry shopping"
+  },
+  "tx_0000AxRAPqwNyCcR5aRDDW": {
+    "inferred_city": null,
+    "inferred_activity": "Dining out"
+  },
+  "tx_0000AxRNY0XZSdTLdZ8dEo": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000AxUcL9hIBcCp3kfbMY": {
+    "inferred_city": null,
+    "inferred_activity": "Donation"
+  },
+  "tx_0000AxUiz5GmfOQzEDLQGH": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000AxVzty2E1yO181zQTh": {
+    "inferred_city": null,
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000AxVzzSwKYRdqX9KxNr": {
+    "inferred_city": null,
+    "inferred_activity": "Transportation"
+  },
+  "tx_0000AxWgXGHcJXcFAlxk2s": {
+    "inferred_city": "Nymphenburg",
+    "inferred_activity": "Museum visit"
+  },
+  "tx_0000AxWiKuzZqcWiCAOovC": {
+    "inferred_city": null,
+    "inferred_activity": "Dining out"
+  },
+  "tx_0000AxWnYRCBvVxGohDyZF": {
+    "inferred_city": "Munich",
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000AxWqGMo5ny54e9MtJi": {
+    "inferred_city": null,
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000AxWrJX6C60vbQOCUC1": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000AxWwz19BmUvYsbO24p": {
+    "inferred_city": null,
+    "inferred_activity": "Donation"
+  },
+  "tx_0000AxX46TlUTkK7SsP74L": {
+    "inferred_city": null,
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000AxXBqhPelgaobaJoZu": {
+    "inferred_city": null,
+    "inferred_activity": "Dining out"
+  },
+  "tx_0000AxXHTmvCig7JxmCO4f": {
+    "inferred_city": "Munich",
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000AxXOgOPjqgvi1ynhJZ": {
+    "inferred_city": null,
+    "inferred_activity": "Dining out"
+  },
+  "tx_0000AxYNP5MJXLtVfETp4b": {
+    "inferred_city": null,
+    "inferred_activity": "Transportation"
+  },
+  "tx_0000AxYV4ZicGRrtqq2mQ6": {
+    "inferred_city": "Munich",
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000AxYZ0cj9XHLbDbUNTV": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000AxZU0TUXZK54QVFPrF": {
+    "inferred_city": null,
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000AxaOLE3ljYCPVuTNZr": {
+    "inferred_city": null,
+    "inferred_activity": "Transportation"
+  },
+  "tx_0000Axak7xXo1bW9dSFQzh": {
+    "inferred_city": "London",
+    "inferred_activity": "Transportation"
+  },
+  "tx_0000Axak8dGYu5y5N8wlXt": {
+    "inferred_city": "London",
+    "inferred_activity": "Transportation"
+  },
+  "tx_0000AxakBnu1oVnurgW41p": {
+    "inferred_city": "London",
+    "inferred_activity": "Transportation"
+  },
+  "tx_0000Axap1AIugYVUOsKMG9": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000AxchFo2dKQzkZsRLxy": {
+    "inferred_city": null,
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000AxcnmMKxx9IYuKh2dV": {
+    "inferred_city": "London",
+    "inferred_activity": "Transportation"
+  },
+  "tx_0000Axd2GmBhnuLnE38p18": {
+    "inferred_city": "London",
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000Axdr5nmSdXuBkNrmpV": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000AxguOYedyxmmdzfI8X": {
+    "inferred_city": null,
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000Axh3vDBni2wZkZ82ni": {
+    "inferred_city": null,
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000Axh60jMlhgXObI05zd": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000AxhIvN9KB2056Aja2z": {
+    "inferred_city": null,
+    "inferred_activity": "Eating Out"
+  },
+  "tx_0000AxhMzXhFIwOrehxjoP": {
+    "inferred_city": null,
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000AxhP9tRfUuxAQ4utvO": {
+    "inferred_city": "London",
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000AxhRJfJz44cYX7DnFp": {
+    "inferred_city": "London",
+    "inferred_activity": "Ride Hailing"
+  },
+  "tx_0000AxhfyhhmVOYuCqVRv0": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000Axhj3r25YKyP05B2qf": {
+    "inferred_city": "London",
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000AxiHIJjd23EaEtJCqY": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "32404735020515560909424027203605": {
+    "inferred_city": "London",
+    "inferred_activity": null
+  },
+  "32404736955592079522622690643090": {
+    "inferred_city": "London",
+    "inferred_activity": "Refund"
+  },
+  "32404736993096098596462925858590": {
+    "inferred_city": "London",
+    "inferred_activity": "Refund"
+  },
+  "tx_0000Axjxh9K3GzkkadLJ3p": {
+    "inferred_city": null,
+    "inferred_activity": "Ride Hailing"
+  },
+  "tx_0000Axk2oA7DDtlMSW2XKr": {
+    "inferred_city": "London",
+    "inferred_activity": null
+  },
+  "tx_0000Axl6lCoBLcv4sB9rCU": {
+    "inferred_city": null,
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000Axl73MFMzhupVnSmTi": {
+    "inferred_city": null,
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000AxpODDE3rgh1mWKjwX": {
+    "inferred_city": "London",
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000AxpOe6IzheZffo789i": {
+    "inferred_city": "London",
+    "inferred_activity": "Eating Out"
+  },
+  "tx_0000Axq9mbcrpkh4H3vcht": {
+    "inferred_city": "London",
+    "inferred_activity": "Book"
+  },
+  "tx_0000Axs0ZctPIn8B0KFfBh": {
+    "inferred_city": "London",
+    "inferred_activity": "Eating Out"
+  },
+  "tx_0000AxsBK7boQmzAUsAgGi": {
+    "inferred_city": null,
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000Axu3Pfo4IlLzIG2E5Z": {
+    "inferred_city": "London",
+    "inferred_activity": "Public Transport"
+  },
+  "tx_0000AxuCEQFQhuoFhG6FZT": {
+    "inferred_city": null,
+    "inferred_activity": "Theatre"
+  },
+  "tx_0000AxuuVKFke41yA3o74E": {
+    "inferred_city": null,
+    "inferred_activity": "Public Transport"
+  },
+  "tx_0000AxuxiJGhuuI8w4TOEc": {
+    "inferred_city": "London",
+    "inferred_activity": "Public Transport"
+  },
+  "tx_0000Axv2uEZbhMazYS2UaX": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000AxvDwpmdQEnF2sSpBB": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000AxvIP3y8fpy28zCFqz": {
+    "inferred_city": "Paris",
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000AxvKfo9Ax822mSj58d": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000AxvLvL6umEyoRfbpJK": {
+    "inferred_city": "Paris",
+    "inferred_activity": "Groceries"
+  },
+  "tx_0000AxvMQ171BEtNstUnoX": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000AxvOQrYGPaKdKnuOTB": {
+    "inferred_city": null,
+    "inferred_activity": "Public Transport"
+  },
+  "tx_0000AxvdksB7I2E2o4wA0g": {
+    "inferred_city": "Paris",
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000AxvgK8OfBKmysE1cUD": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000AxvoIr3Gz3ITSDdP18": {
+    "inferred_city": null,
+    "inferred_activity": "Public Transport"
+  },
+  "tx_0000AxvurPIikh7m4JL7YX": {
+    "inferred_city": "Paris",
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000AxvvuMbPLFhHT5qcAk": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000AxvwRZY4EHawEJKJQP": {
+    "inferred_city": null,
+    "inferred_activity": "Public Transport"
+  },
+  "tx_0000Axw6IqB61z24oPzC1h": {
+    "inferred_city": "Paris",
+    "inferred_activity": "Dining"
+  },
+  "tx_0000Axw7Se9FiCrGLvMaFI": {
+    "inferred_city": null,
+    "inferred_activity": "Groceries"
+  },
+  "tx_0000AxwEOgwO5Rpbt4Klqk": {
+    "inferred_city": null,
+    "inferred_activity": "Dining"
+  },
+  "tx_0000AxwGg3naYPfEHcdPIx": {
+    "inferred_city": null,
+    "inferred_activity": "Public Transport"
+  },
+  "tx_0000AxxLHV5gdlEBAuMsr3": {
+    "inferred_city": null,
+    "inferred_activity": "Public Transport"
+  },
+  "tx_0000AxxSdKOHnomuDYU0Yu": {
+    "inferred_city": "Paris",
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000AxxVmHgHXvoofmWpBh": {
+    "inferred_city": "Paris",
+    "inferred_activity": "Dining"
+  },
+  "tx_0000AxxZZp7qHyZhuRed73": {
+    "inferred_city": "Paris",
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000Axy8G7qoSJabimQ4zx": {
+    "inferred_city": "Paris",
+    "inferred_activity": "Dining"
+  },
+  "tx_0000AxyBAPUeFRnb6adnLV": {
+    "inferred_city": "Paris",
+    "inferred_activity": "Groceries"
+  },
+  "tx_0000AxyMaowbLOSd64Uhnf": {
+    "inferred_city": null,
+    "inferred_activity": "Dining"
+  },
+  "tx_0000AxyV1VMd39IOepzQ9Z": {
+    "inferred_city": null,
+    "inferred_activity": "Dining"
+  },
+  "tx_0000AxyXJacURnYdrxmovS": {
+    "inferred_city": null,
+    "inferred_activity": "Public Transport"
+  },
+  "tx_0000AxzTqPXiRmCFA74D8D": {
+    "inferred_city": null,
+    "inferred_activity": "Public Transport"
+  },
+  "tx_0000AxzUeWCtwY46Cjvvnt": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000Ay00krhS8yZ3zkwtUo": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000Ay03dI7qJGoRumJ0mx": {
+    "inferred_city": null,
+    "inferred_activity": "Shopping"
+  },
+  "tx_0000Ay059g7qiHzxk6Libb": {
+    "inferred_city": null,
+    "inferred_activity": "Dining"
+  },
+  "tx_0000Ay0gOfSv98ciRsZSNN": {
+    "inferred_city": "London",
+    "inferred_activity": "Public Transport"
+  },
+  "tx_0000Ay0nYTHdzc3HdVkKUD": {
+    "inferred_city": null,
+    "inferred_activity": "Ride hailing"
+  },
+  "tx_0000Ay0nma0BoI2o6Ly1aL": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000Ay1YgWg9wqFYNeEPxa": {
+    "inferred_city": null,
+    "inferred_activity": "Mobile top up"
+  },
+  "tx_0000Ay1jGPrtkLzXYJf3Mx": {
+    "inferred_city": null,
+    "inferred_activity": "Convenience store"
+  },
+  "tx_0000Ay3Tc85FL9UZk9siED": {
+    "inferred_city": null,
+    "inferred_activity": "Public transport"
+  },
+  "tx_0000Ay3v2Oc5CgHipnIwhH": {
+    "inferred_city": null,
+    "inferred_activity": "Food delivery"
+  },
+  "tx_0000Ay3vTgnxfx39bdp7Wj": {
+    "inferred_city": null,
+    "inferred_activity": "Food ordering"
+  },
+  "tx_0000Ay3vjufZtW6GTykvIH": {
+    "inferred_city": null,
+    "inferred_activity": "Fast food"
+  },
+  "tx_0000Ay3wQit9ZWhjS90kpV": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000Ay4AJNDL9oQ0vEOQN7": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000Ay4RL2rnTh4jLgBlDv": {
+    "inferred_city": null,
+    "inferred_activity": "Coffee shop"
+  },
+  "tx_0000Ay6SKkUcHRAXboqrCb": {
+    "inferred_city": null,
+    "inferred_activity": "Trampoline park"
+  },
+  "tx_0000Ay6U3xEpq75zyemOQL": {
+    "inferred_city": null,
+    "inferred_activity": "Chocolates"
+  },
+  "tx_0000Ay72swedAQCpJszFGD": {
+    "inferred_city": null,
+    "inferred_activity": "Public transport"
+  },
+  "tx_0000Ay7oeV1jspXGSt6Fxx": {
+    "inferred_city": null,
+    "inferred_activity": "Public transport"
+  },
+  "tx_0000Ay88umCpmJ9A4b9fSD": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000Ay8SdWFtpLUZt9vkdn": {
+    "inferred_city": null,
+    "inferred_activity": "Pet store"
+  },
+  "tx_0000Ay8Y6sZYQobsEmJKbK": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000Ay8jpAJCwrZXU0z6qy": {
+    "inferred_city": null,
+    "inferred_activity": "Fast food"
+  },
+  "tx_0000Ay8jqoK7ezJarAqtLl": {
+    "inferred_city": null,
+    "inferred_activity": "Fast food"
+  },
+  "tx_0000Ay8keQAZjpED1SVWq2": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000AyAD5fMeLNkUcDHekr": {
+    "inferred_city": null,
+    "inferred_activity": "Bakery"
+  },
+  "tx_0000AyAIOWddVjZKEVDYHL": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000AyAWSHYSvnBy5xFmk5": {
+    "inferred_city": null,
+    "inferred_activity": "Trampoline park"
+  },
+  "tx_0000AyAbHJVJqKvBrZ6QfB": {
+    "inferred_city": null,
+    "inferred_activity": "Department store"
+  },
+  "tx_0000AyAd2m8zHKfj7D7YnZ": {
+    "inferred_city": null,
+    "inferred_activity": "Public transport"
+  },
+  "tx_0000AyD1KZ8XAGZMFlWqjy": {
+    "inferred_city": "Brisbane",
+    "inferred_activity": "Airport"
+  },
+  "tx_0000AyID8hQ0iXw5dgtYTj": {
+    "inferred_city": null,
+    "inferred_activity": "Hotel"
+  },
+  "tx_0000AyJy28aqArnjjLmqcE": {
+    "inferred_city": null,
+    "inferred_activity": "Travel booking"
+  },
+  "32434234805845325703557022906692": {
+    "inferred_city": null,
+    "inferred_activity": "Travel booking"
+  },
+  "tx_0000AzV0jP7kyIbTzzEgaZ": {
+    "inferred_city": null,
+    "inferred_activity": "Booked a flight"
+  },
+  "tx_0000AzV8dzgUvZNIkf0H7x": {
+    "inferred_city": null,
+    "inferred_activity": "Booked a flight"
+  },
+  "tx_0000AzXEQzh2ZWZ8d2ntC6": {
+    "inferred_city": null,
+    "inferred_activity": "Booked a trip"
+  },
+  "tx_0000AzfKuxoWHGOFfLOkXR": {
+    "inferred_city": null,
+    "inferred_activity": "Booked a trip"
+  },
+  "tx_0000AzfQIehnTPAImKBZnm": {
+    "inferred_city": null,
+    "inferred_activity": "Booked a trip"
+  },
+  "32511669708909483079636223797394": {
+    "inferred_city": null,
+    "inferred_activity": "Bought beauty products"
+  },
+  "2e83d193-90a7-4b94-87d0-5a28b29c0f1a": {
+    "inferred_city": "Stockholm",
+    "inferred_activity": "Online shopping"
+  },
+  "4a732799-db3f-437b-98fa-6fbac2efa132": {
+    "inferred_city": "GOTEBORG",
+    "inferred_activity": "Hotel booking"
+  },
+  "69fcf998-60a7-4389-8492-50a99e1e3231": {
+    "inferred_city": "Sydney",
+    "inferred_activity": "Hotel booking"
+  },
+  "52f5a10d-f840-41a0-9cab-ec9bdea7db69": {
+    "inferred_city": "PUTEAUX CEDEX",
+    "inferred_activity": "Telecom service"
+  },
+  "4f7ee9be-73cd-40bf-8d4e-56f796343d6a": {
+    "inferred_city": "LISBOA",
+    "inferred_activity": "Recreational activity"
+  },
+  "32526586682780523109087430363635": {
+    "inferred_city": null,
+    "inferred_activity": "Bought masks"
+  },
+  "8144c4ef-a145-44c2-a1e7-cca396317a80": {
+    "inferred_city": "SKOVDE",
+    "inferred_activity": "Transportation"
+  },
+  "d35c7274-9e76-4d2a-80f7-c98accd3a84d": {
+    "inferred_city": "VASTRA FROLUN",
+    "inferred_activity": "Grocery shopping"
+  },
+  "f3141db1-a7af-46ca-ad8c-b8ef8c72d56d": {
+    "inferred_city": "GOTEBORG",
+    "inferred_activity": "Grocery shopping"
+  },
+  "e1f42f2f-90b7-42bd-aaa7-a6a8df092da7": {
+    "inferred_city": "Goteborg",
+    "inferred_activity": "Dining out"
+  },
+  "4cf461b2-54ea-40b4-a584-bc358d16a2bd": {
+    "inferred_city": "GOTEBORG",
+    "inferred_activity": "Dining out"
+  },
+  "9bb0e663-6636-4a02-8744-70e2cf6ada6e": {
+    "inferred_city": "GOTEBORG",
+    "inferred_activity": "Pharmacy purchase"
+  },
+  "0a530a6c-29de-426f-804e-c729ed8fc621": {
+    "inferred_city": "GOTEBORG",
+    "inferred_activity": "Hotel booking"
+  },
+  "e552dbdb-f0e8-40c7-bcdb-774bfcd09492": {
+    "inferred_city": "Goteborg",
+    "inferred_activity": "Food purchase"
+  },
+  "ac440ea2-6dee-4982-ba51-94fe7ef564be": {
+    "inferred_city": "Goeteborg",
+    "inferred_activity": "Hotel booking"
+  },
+  "5b975cf5-dba9-4264-aa43-14b39122baa9": {
+    "inferred_city": "Copenhagen",
+    "inferred_activity": "Retail purchase"
+  },
+  "b5f099a5-dafb-42f0-b859-b5954c076c56": {
+    "inferred_city": "Taastrup",
+    "inferred_activity": "Public transport"
+  },
+  "7004aa17-33ae-43da-8cc8-e119d6e86e9b": {
+    "inferred_city": "Koebenhavn K",
+    "inferred_activity": "Food purchase"
+  },
+  "c364375a-7578-4462-b6e6-0e66509afb8c": {
+    "inferred_city": "KOBENHAVN K",
+    "inferred_activity": "Convenience store"
+  },
+  "5d540925-67ba-4084-9b04-92551f5a5c1b": {
+    "inferred_city": "KXBENHAVN",
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000B0TxCRkviZjynxCDXW": {
+    "inferred_city": null,
+    "inferred_activity": "Retail shopping"
+  },
+  "tx_0000B0V7ZDMsZUVnpBxh0T": {
+    "inferred_city": null,
+    "inferred_activity": "Retail shopping"
+  },
+  "tx_0000B0VVgfU8pRAKXybWbK": {
+    "inferred_city": null,
+    "inferred_activity": "Tour booking"
+  },
+  "tx_0000B0VeVmg2eEepZI8Tsw": {
+    "inferred_city": null,
+    "inferred_activity": "Coffee purchase"
+  },
+  "tx_0000B0VfPlm5BtDp4SRbW8": {
+    "inferred_city": null,
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000B0VgLVpOdaqjSAcpKj": {
+    "inferred_city": "Copenhagen",
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000B0VnzrCzGQu9tfxc9b": {
+    "inferred_city": null,
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000B0Vo1xwXCCsF38BqNP": {
+    "inferred_city": null,
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000B0Vo2sdMQBLnYspGZ2": {
+    "inferred_city": null,
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000B0Vyz8zgkexOk7ndNi": {
+    "inferred_city": null,
+    "inferred_activity": "Dining out"
+  },
+  "tx_0000B0W48DFGoYM6CY7eMe": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000B0W4PzIZPHPIsVoa3P": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000B0WnCakTrnnPog5xwH": {
+    "inferred_city": "London",
+    "inferred_activity": "Travel booking"
+  },
+  "32542445978427766652131062559884": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "32542446898549842069234124257554": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000B0crwaN5ARngjR66T4": {
+    "inferred_city": "Dublin",
+    "inferred_activity": "Flight purchase"
+  },
+  "32542474902559996120859869385646": {
+    "inferred_city": "Dublin",
+    "inferred_activity": "Flight purchase"
+  },
+  "32542479941479428220353618751935": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "32542482653252297045021406906642": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "77f0fb4e-0186-4659-a5bb-32a443a1f86a": {
+    "inferred_city": "AICHI",
+    "inferred_activity": "Shopping"
+  },
+  "a48af95c-8dee-4977-9461-be0a09c73196": {
+    "inferred_city": "AICHI",
+    "inferred_activity": "Shopping"
+  },
+  "d97aab26-cedb-4366-91d3-04a78cd380e5": {
+    "inferred_city": "AICHI",
+    "inferred_activity": "Shopping"
+  },
+  "32544246698052880661725698800348": {
+    "inferred_city": null,
+    "inferred_activity": "Train travel"
+  },
+  "32547666081484993198989800814981": {
+    "inferred_city": null,
+    "inferred_activity": "Food purchase"
+  },
+  "32550176527278752237997882997732": {
+    "inferred_city": null,
+    "inferred_activity": "Household supplies"
+  },
+  "342a117f-f763-434f-b010-74cd61b1b974": {
+    "inferred_city": "London",
+    "inferred_activity": "Online shopping"
+  },
+  "92888769-0327-4cd6-984d-7f270049c7da": {
+    "inferred_city": "Shenzhen",
+    "inferred_activity": "Online shopping"
+  },
+  "b36487a1-277c-4669-b9df-5086b89ac778": {
+    "inferred_city": null,
+    "inferred_activity": "Food purchase"
+  },
+  "a3d77d48-6720-485e-a074-ae0df0adb703": {
+    "inferred_city": "Chongqing",
+    "inferred_activity": "Online transaction"
+  },
+  "32555652909046371649584555242013": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "9f3de36f-ead6-4bf6-b7c9-7aa71b7ae498": {
+    "inferred_city": "Chongqing",
+    "inferred_activity": "Online transaction"
+  },
+  "99e74574-ece0-4951-82d4-a30cf90d0789": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "Online transaction"
+  },
+  "193940da-029b-44b3-b8ca-cca07f49f21f": {
+    "inferred_city": "Sydney",
+    "inferred_activity": "Hotel booking"
+  },
+  "9023e7b4-a723-4dcc-9afc-73f6cbfbf81b": {
+    "inferred_city": "Schiphol",
+    "inferred_activity": "Flight purchase"
+  },
+  "715baa28-2896-4479-a670-8d992cbd7ca4": {
+    "inferred_city": "Chongqing",
+    "inferred_activity": "Transit Payment"
+  },
+  "96d3f95c-d109-4967-b1b7-525b14a8990e": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "Transit Payment"
+  },
+  "bcfd2588-837e-4a96-98d2-fa6b14cf45b8": {
+    "inferred_city": null,
+    "inferred_activity": "Hotel Booking"
+  },
+  "679358df-6517-4953-b793-f5d6aea6337f": {
+    "inferred_city": null,
+    "inferred_activity": "Hotel Booking"
+  },
+  "d7c0133b-01d8-4ce1-b091-8f23c95d568a": {
+    "inferred_city": "Beijing",
+    "inferred_activity": "Online Payment"
+  },
+  "cd2e7e1d-15e2-4187-b0f4-8f0f207f920f": {
+    "inferred_city": "Beijing",
+    "inferred_activity": "Online Payment"
+  },
+  "fa88739d-856a-4de3-b451-0f3aafc39816": {
+    "inferred_city": null,
+    "inferred_activity": "Shopping"
+  },
+  "770014c8-8491-4095-a5ec-5b3f8d3308a1": {
+    "inferred_city": null,
+    "inferred_activity": "Shopping"
+  },
+  "ca6a87d6-28e1-48eb-b4de-96d2b09699d7": {
+    "inferred_city": "Chongqing",
+    "inferred_activity": "Transit Payment"
+  },
+  "9df7014c-ff27-40c9-a21d-b2c67c8c3b73": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "Travel Booking"
+  },
+  "a714890c-3e3e-417c-8483-4362832427c3": {
+    "inferred_city": "Zhongqing",
+    "inferred_activity": "Online Payment"
+  },
+  "8be5bcec-7ec5-462f-9ad8-55b62d06da96": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "Retail Shopping"
+  },
+  "ca158cea-4821-4473-88f8-8ac35c756f98": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "Beauty Shopping"
+  },
+  "11248e62-5204-400f-b954-42c15dc8ea60": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "Beauty Shopping"
+  },
+  "3b06dd88-92c8-4216-a365-4f04b63ec6d5": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "Retail Shopping"
+  },
+  "b3c37bab-8443-4b86-9b56-cb743bd902d7": {
+    "inferred_city": "Chongqing",
+    "inferred_activity": "Transit Payment"
+  },
+  "f305a8a9-ac73-4233-bf2c-8c912ac87136": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "Programming"
+  },
+  "ad1c992f-cc86-4b93-9c43-6e0bafc62f0f": {
+    "inferred_city": null,
+    "inferred_activity": "Hotel Booking"
+  },
+  "f002ef0b-ff88-4405-88b0-a1a26a366deb": {
+    "inferred_city": null,
+    "inferred_activity": "Shopping"
+  },
+  "e8744ea8-fee5-4605-8bb6-c82627577847": {
+    "inferred_city": null,
+    "inferred_activity": "Shopping"
+  },
+  "625c01aa-67f0-4540-86c3-a21c16cb2156": {
+    "inferred_city": null,
+    "inferred_activity": "Shopping"
+  },
+  "76c5459d-908a-4287-aa7c-e504bca2ea42": {
+    "inferred_city": null,
+    "inferred_activity": "Shopping"
+  },
+  "46676b70-1f99-4f45-b6ee-a0d252657e5c": {
+    "inferred_city": null,
+    "inferred_activity": "Shopping"
+  },
+  "8ab17de6-d607-4151-b703-6c314c42d487": {
+    "inferred_city": null,
+    "inferred_activity": "Shopping"
+  },
+  "1ace9dff-d88c-4898-88d6-8fb22af88fcb": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "90786280-34bf-4d99-83a9-8171917fb360": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "Online Payment"
+  },
+  "705ad61e-89b7-4ddc-a264-6cfc518648c2": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "Travel Booking"
+  },
+  "9b9779bb-abdd-464f-bda2-79d9982706e6": {
+    "inferred_city": null,
+    "inferred_activity": "Clothing"
+  },
+  "13ebd886-1e84-416a-a915-e8c20b0099fb": {
+    "inferred_city": "Shenzhen",
+    "inferred_activity": "Fitness"
+  },
+  "1dfa490e-696a-4a71-ba14-014186739c14": {
+    "inferred_city": "Shenzhen",
+    "inferred_activity": "Metro Payment"
+  },
+  "a55d03af-c853-4e63-bd7c-5f23cc9fd746": {
+    "inferred_city": "Shenzhen",
+    "inferred_activity": "public transportation"
+  },
+  "7999b83a-83b1-4785-a114-4e387ca64f1d": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "food purchase"
+  },
+  "c54b4873-e93c-4913-8fce-bffed5d9d169": {
+    "inferred_city": "Beijing",
+    "inferred_activity": null
+  },
+  "bf16f6d2-ea7c-4e37-b1e2-eb8b7d341304": {
+    "inferred_city": "Shenzhen",
+    "inferred_activity": "public transportation"
+  },
+  "3dee02ea-a4a1-4a1c-b72d-5e03e3359f52": {
+    "inferred_city": "Beijing",
+    "inferred_activity": null
+  },
+  "f9e03da8-cdeb-4dba-aac4-275fc4cd4bc0": {
+    "inferred_city": "Shenzhen",
+    "inferred_activity": "public transportation"
+  },
+  "3c607c5c-ed2e-45a4-9e71-2b6a89be2623": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "public transportation"
+  },
+  "aa7ab82e-1907-4f76-ad07-1f067c1b3fec": {
+    "inferred_city": "Shenzhen",
+    "inferred_activity": null
+  },
+  "0bfbff12-b21b-42fc-b467-8e1ee78a9eb5": {
+    "inferred_city": "Beijing",
+    "inferred_activity": null
+  },
+  "ebfdd5c7-b8d9-46db-aa10-07a02cdc2c48": {
+    "inferred_city": "Shenzhen",
+    "inferred_activity": "public transportation"
+  },
+  "975385a2-92ee-4282-b296-2bdd0b9f4ff9": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "food purchase"
+  },
+  "c4b3ac7a-192a-45ed-a020-ecb29788fbeb": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "public transportation"
+  },
+  "7bf620f8-5c93-4c6d-b34e-b191da328673": {
+    "inferred_city": null,
+    "inferred_activity": "online shopping"
+  },
+  "b9c687ed-685e-4714-9861-d892eff88d38": {
+    "inferred_city": "Beijing",
+    "inferred_activity": null
+  },
+  "7eea797e-42cc-4c2d-80e0-6c8d2be3ae84": {
+    "inferred_city": "Shenzhen",
+    "inferred_activity": null
+  },
+  "0a885559-4189-49ca-bcca-a3638c1c61ef": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "shopping"
+  },
+  "abdf4f62-dcd0-47c6-aad8-1e003a63019f": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "public transportation"
+  },
+  "8f12d38e-d7b1-42d5-bc51-ef2ac72a253f": {
+    "inferred_city": "Shenzhen",
+    "inferred_activity": "public transportation"
+  },
+  "e458c205-861b-416c-9cfe-c2a895c55e89": {
+    "inferred_city": "Shenzhen",
+    "inferred_activity": "travel booking"
+  },
+  "7b4be933-e324-4f5d-8c4f-97ab8a46e996": {
+    "inferred_city": "Shenzhen",
+    "inferred_activity": null
+  },
+  "5b4ac1bb-3c74-4066-9d7e-edbdd5b25330": {
+    "inferred_city": "Shenzhen",
+    "inferred_activity": "convenience store"
+  },
+  "bfa177df-778b-4252-9173-fed8203c6a62": {
+    "inferred_city": "Shenzhen",
+    "inferred_activity": "public transportation"
+  },
+  "ee0f9170-7f7b-4d7e-a9e7-93919f94c46d": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "public transportation"
+  },
+  "42cd1da2-ff12-4f39-b23c-e9bf84f5daf5": {
+    "inferred_city": "Shenzhen",
+    "inferred_activity": "public transportation"
+  },
+  "b28193a2-7869-458e-b636-5389121d43a5": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "online shopping"
+  },
+  "a40cb958-0d9e-4aa9-908f-80e6cb278f99": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "public transportation"
+  },
+  "efbe92f4-cdfc-4297-a5ce-94fcdadc6623": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "programming course"
+  },
+  "03b5631b-1abe-4348-8668-7d5840e2f549": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "online shopping"
+  },
+  "11216ad9-b6d1-4f3c-aa8e-1d865560bf41": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "online shopping"
+  },
+  "a7ebfc25-e78f-433b-94d6-c29893307aab": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "online shopping"
+  },
+  "c588b41e-0d6f-48f4-a838-ba5880b20514": {
+    "inferred_city": "AICHI",
+    "inferred_activity": "train travel"
+  },
+  "1143e89c-58d9-4a4b-9578-539880ebfadc": {
+    "inferred_city": "TOUKIYOUTO",
+    "inferred_activity": "train travel"
+  },
+  "5ac3364a-4b3f-4c3a-a0b3-4676b8f033ce": {
+    "inferred_city": "Shenzhen",
+    "inferred_activity": "online shopping"
+  },
+  "916cdd1f-17e2-4816-a16f-e46501614641": {
+    "inferred_city": null,
+    "inferred_activity": "online payment"
+  },
+  "8349b00d-8948-4132-93dd-212f7fd914c4": {
+    "inferred_city": null,
+    "inferred_activity": "online payment"
+  },
+  "c7d615b9-127c-475e-bfdb-09ed8f1933c9": {
+    "inferred_city": "Beijing",
+    "inferred_activity": "online shopping"
+  },
+  "6c08a23c-8c67-4f5e-8942-d14e7cced2e4": {
+    "inferred_city": null,
+    "inferred_activity": "online payment"
+  },
+  "58c8b69a-8c62-43a8-9ac5-3a8f221fc450": {
+    "inferred_city": "ShenZhen",
+    "inferred_activity": "online shopping"
+  },
+  "a54269af-a466-4bc0-8738-b0a9bb9ed04f": {
+    "inferred_city": "CHIBA",
+    "inferred_activity": "airport travel"
+  },
+  "663655f4-7d0b-4824-ab0e-19ca65fd2bcc": {
+    "inferred_city": "TOKYO",
+    "inferred_activity": "hotel stay"
+  },
+  "ec97ebeb-a84a-48db-80e0-73f41479ef63": {
+    "inferred_city": "TOKYO",
+    "inferred_activity": "dining out"
+  },
+  "26b568e5-eea5-4be6-918d-ad1585f98ce9": {
+    "inferred_city": "TOKYO",
+    "inferred_activity": "convenience store"
+  },
+  "bfd06cc8-212a-4b63-b0fc-cc82d414301e": {
+    "inferred_city": "TOKYO",
+    "inferred_activity": "transportation"
+  },
+  "81b65a5c-bd66-4460-83df-09e76e9b3ebb": {
+    "inferred_city": "KANAGAWAKEN",
+    "inferred_activity": "tourist attraction"
+  },
+  "bdfb4ac8-8e74-4aea-8581-989785bf4eb2": {
+    "inferred_city": null,
+    "inferred_activity": "banking"
+  },
+  "d33b7faf-7fac-47d9-840c-fccedd6da79f": {
+    "inferred_city": "KANAGAWA",
+    "inferred_activity": "chocolate shop"
+  },
+  "00c0f9bd-7c6a-4d05-ab3f-d0648f241b3e": {
+    "inferred_city": "TOUKIYOUTO",
+    "inferred_activity": "dining out"
+  },
+  "bad3ac20-f2c0-441a-b319-d0d5295fefff": {
+    "inferred_city": "TOUKIYOUTO",
+    "inferred_activity": "mobile payment"
+  },
+  "4aa2075f-d098-434c-8dcf-2c1a11bf9e62": {
+    "inferred_city": "TOKYO",
+    "inferred_activity": "drug store"
+  },
+  "c01daf32-3a72-45a1-8385-c39c49070fd9": {
+    "inferred_city": "TOUKIYOUTO",
+    "inferred_activity": "shopping center"
+  },
+  "fd01cab0-ea76-4dc4-b303-c2c88efa3966": {
+    "inferred_city": null,
+    "inferred_activity": "skincare"
+  },
+  "0c7b8b0c-d6a5-41ea-815b-84fee958db6b": {
+    "inferred_city": "HIROSHIMA",
+    "inferred_activity": "dollar store"
+  },
+  "5cd935d2-281e-4e2b-b3bc-f9207902071a": {
+    "inferred_city": "TOKYO",
+    "inferred_activity": "treasure hunting"
+  },
+  "c8910849-191d-4797-ae45-6f7c3e4a4c29": {
+    "inferred_city": "TOKYO",
+    "inferred_activity": "ramen shop"
+  },
+  "bc65912d-16bf-42c9-8cde-4cc7a488ae0b": {
+    "inferred_city": "TOKYO",
+    "inferred_activity": "electronics"
+  },
+  "f70b3d70-53d0-473c-81b7-43b65dd45485": {
+    "inferred_city": "TOKYO",
+    "inferred_activity": "stream shopping"
+  },
+  "ee1e9895-8f23-4ad7-9915-024a12fac56e": {
+    "inferred_city": null,
+    "inferred_activity": "dinner"
+  },
+  "4722e7c2-2844-4d43-85fd-e2faffffd016": {
+    "inferred_city": "TOKYO",
+    "inferred_activity": "drug store"
+  },
+  "93b5b020-112b-4e97-8f48-d5908328c463": {
+    "inferred_city": "TOKYO",
+    "inferred_activity": "tea house"
+  },
+  "9c4346fb-5920-48bf-ae0e-6c5237f392c7": {
+    "inferred_city": "TOKYO",
+    "inferred_activity": "store shopping"
+  },
+  "e0a0d354-349f-4f2c-8777-1898506acf36": {
+    "inferred_city": "Tokyo",
+    "inferred_activity": "Shopping"
+  },
+  "3034fb44-fc60-4502-92f4-171aa8bb996f": {
+    "inferred_city": "Tokyo",
+    "inferred_activity": "Convenience Store"
+  },
+  "4e6543a4-904b-4672-9222-5b4a13f81819": {
+    "inferred_city": null,
+    "inferred_activity": "Mobile Payment"
+  },
+  "2ae10413-7ec8-4775-818f-1cd69c631934": {
+    "inferred_city": null,
+    "inferred_activity": "Railway"
+  },
+  "1254db2f-9374-449d-8b9d-3758f5817097": {
+    "inferred_city": null,
+    "inferred_activity": "Railway"
+  },
+  "345486e4-809e-408d-9d18-1a32b7416c4d": {
+    "inferred_city": "Yamanashi",
+    "inferred_activity": "Accommodation"
+  },
+  "935fc01c-076b-45dd-8362-4ad3f1cca223": {
+    "inferred_city": null,
+    "inferred_activity": "Bicycle"
+  },
+  "ee3cf767-e8d9-47f2-91cb-625429f02da2": {
+    "inferred_city": "Yamanashi",
+    "inferred_activity": "Pharmacy"
+  },
+  "d3a5f2bb-e488-44c1-ba03-4059667f04c2": {
+    "inferred_city": "Tokyo",
+    "inferred_activity": "Banking"
+  },
+  "2b241fac-96f0-4139-b37c-c89b88417e36": {
+    "inferred_city": null,
+    "inferred_activity": "Convenience Store"
+  },
+  "2bbdf1a5-4380-4674-9b57-794479290003": {
+    "inferred_city": "Tokyo",
+    "inferred_activity": "Shopping"
+  },
+  "a81033c5-3a79-4488-a51d-4c431c723aac": {
+    "inferred_city": "Tokyo",
+    "inferred_activity": "Shopping"
+  },
+  "9e068019-a895-42e5-9181-d8cfdc218ab9": {
+    "inferred_city": "Tokyo",
+    "inferred_activity": "Cafe"
+  },
+  "1412a9e1-5b26-42e5-ae43-b05b26f87035": {
+    "inferred_city": "Tokyo",
+    "inferred_activity": "Food"
+  },
+  "a93e7b24-e416-4a4b-9d6b-f284dd30c324": {
+    "inferred_city": "Shibuya",
+    "inferred_activity": "Music"
+  },
+  "6c140108-2011-4934-98ab-fc19ffbe09fe": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "7092bfa0-7e7d-47b0-a466-87ec6435b2f1": {
+    "inferred_city": null,
+    "inferred_activity": "Mobile Payment"
+  },
+  "24be4f76-2cf3-4f5d-b989-e15d6bc2fb44": {
+    "inferred_city": null,
+    "inferred_activity": "Mobile Payment"
+  },
+  "71d22e90-b057-4374-bf17-4b4587980b05": {
+    "inferred_city": "Osaka",
+    "inferred_activity": "Shopping"
+  },
+  "9faa4067-255c-493b-b70e-009b7e27743a": {
+    "inferred_city": "Osaka",
+    "inferred_activity": "Shopping"
+  },
+  "7c66cfe3-c8eb-4bf4-9f99-115235cd5152": {
+    "inferred_city": "Osaka",
+    "inferred_activity": "Shopping"
+  },
+  "f31bc0fe-d251-406a-baa1-1733fd9c3416": {
+    "inferred_city": "Osaka",
+    "inferred_activity": "Shopping"
+  },
+  "388b1857-fe48-4e25-9543-bcd6205e8747": {
+    "inferred_city": "Kyoto",
+    "inferred_activity": "Boat Ride"
+  },
+  "b16dce62-5263-457e-8e6f-32aaed6c8495": {
+    "inferred_city": null,
+    "inferred_activity": "Mobile Payment"
+  },
+  "13d2d783-970d-4436-8d46-6c73dc600f78": {
+    "inferred_city": "Osaka",
+    "inferred_activity": null
+  },
+  "1cad869d-85fe-4c39-ab7c-ca90e0c98ed7": {
+    "inferred_city": "Hyogo",
+    "inferred_activity": "Grocery"
+  },
+  "d2443bdd-6366-42d8-a914-66ef7bed2068": {
+    "inferred_city": "Osaka",
+    "inferred_activity": "Coffee"
+  },
+  "6c221d00-bcf1-4950-b5bf-17149c36688c": {
+    "inferred_city": "Osaka",
+    "inferred_activity": null
+  },
+  "4ea88861-2046-4303-82e2-eb37aa542076": {
+    "inferred_city": "Osaka",
+    "inferred_activity": "Shopping"
+  },
+  "429861ca-9923-4a0f-bdec-684bf7a5ec7d": {
+    "inferred_city": null,
+    "inferred_activity": "Mobile Payment"
+  },
+  "8d130cf9-7459-4873-b174-c5afa5b75625": {
+    "inferred_city": "Chiba",
+    "inferred_activity": "airport fee"
+  },
+  "00b639fb-1f42-4322-9a09-86e5f97b9cdf": {
+    "inferred_city": "Osaka",
+    "inferred_activity": "convenience store"
+  },
+  "c203072d-3b1a-44b5-bb8a-be08e63d92f8": {
+    "inferred_city": null,
+    "inferred_activity": "online payment"
+  },
+  "4930995f-b526-43a2-8e46-2e4a44615dfb": {
+    "inferred_city": null,
+    "inferred_activity": "online payment"
+  },
+  "fad8c219-3375-4d9c-b98a-759af9210d45": {
+    "inferred_city": null,
+    "inferred_activity": "post office fee"
+  },
+  "a6949f4f-1372-4abf-9df9-230e389c4d71": {
+    "inferred_city": null,
+    "inferred_activity": "online payment"
+  },
+  "203294b2-a7e6-449f-bbc4-6594050aede9": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "metro payment"
+  },
+  "e39b6a5b-4f25-4a63-a4ef-645b2de9b966": {
+    "inferred_city": null,
+    "inferred_activity": "temple donation"
+  },
+  "93ef9a28-fc1b-4964-bf57-9b1b8b87abfd": {
+    "inferred_city": null,
+    "inferred_activity": "cafe purchase"
+  },
+  "ad0f5d7f-1d1a-4f53-a8eb-1a83905654e7": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "metro payment"
+  },
+  "359cd38b-6e3e-48d1-8fc7-a43686c34be8": {
+    "inferred_city": null,
+    "inferred_activity": "warehouse fee"
+  },
+  "6d80cc5d-fd31-497d-b1ee-914a342342dc": {
+    "inferred_city": "Beijing",
+    "inferred_activity": "railway ticket"
+  },
+  "d418cbf4-771e-4edf-928b-c37058a0b5b3": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "metro payment"
+  },
+  "2f2bb073-0444-47ad-af62-06debfc9746f": {
+    "inferred_city": null,
+    "inferred_activity": "dinner"
+  },
+  "6cb2ae1d-2ba3-493f-83ac-0d5a8715d35d": {
+    "inferred_city": null,
+    "inferred_activity": "online shopping"
+  },
+  "90b7ecea-2d60-417e-ad91-0901ccad9909": {
+    "inferred_city": null,
+    "inferred_activity": "food purchase"
+  },
+  "61a4f6ae-c6c0-4196-9ce6-6c52cd5c8bd8": {
+    "inferred_city": "Beijing",
+    "inferred_activity": "museum visit"
+  },
+  "fe7ce3d3-0957-4710-874c-01012798e15e": {
+    "inferred_city": null,
+    "inferred_activity": "food purchase"
+  },
+  "de3c5903-2c5e-4fa3-92e7-f85f86ed4c91": {
+    "inferred_city": null,
+    "inferred_activity": "tech purchase"
+  },
+  "b307998d-a539-4e81-bfa1-b95de56101dc": {
+    "inferred_city": "Beijing",
+    "inferred_activity": "online shopping"
+  },
+  "40dfb710-468e-4bd7-a03a-ccd7be9be73c": {
+    "inferred_city": null,
+    "inferred_activity": "online shopping"
+  },
+  "75153964-b059-408b-be40-dea16aaeb0f4": {
+    "inferred_city": null,
+    "inferred_activity": "liquor purchase"
+  },
+  "f05026f0-1082-40d2-9044-12fe0a2b408c": {
+    "inferred_city": null,
+    "inferred_activity": "tea purchase"
+  },
+  "a0f3c4cc-4cd9-4906-b8b2-10a4d82530a1": {
+    "inferred_city": "Beijing",
+    "inferred_activity": "online shopping"
+  },
+  "37cbbbac-a62d-4d32-8b3d-bb7e531e4d0e": {
+    "inferred_city": null,
+    "inferred_activity": "online shopping"
+  },
+  "687a3723-ac7b-469d-89af-d447f9465ded": {
+    "inferred_city": null,
+    "inferred_activity": "online shopping"
+  },
+  "00771784-8126-47fb-8c24-3369ba8931c1": {
+    "inferred_city": null,
+    "inferred_activity": "online shopping"
+  },
+  "1e492042-1961-4881-a9d6-66a60e6ad051": {
+    "inferred_city": null,
+    "inferred_activity": "online shopping"
+  },
+  "9063bb28-7d3d-420e-a7a8-06c5cd381246": {
+    "inferred_city": null,
+    "inferred_activity": "online shopping"
+  },
+  "13941807-258b-4d24-b1aa-e3ce5d4e82b8": {
+    "inferred_city": null,
+    "inferred_activity": "ride hailing"
+  },
+  "64898e31-f0c4-4890-ad2a-aa332169dd3d": {
+    "inferred_city": "Beijing",
+    "inferred_activity": "Scan QR code"
+  },
+  "586a935c-ea4d-4084-98bb-fa98cf5fc692": {
+    "inferred_city": null,
+    "inferred_activity": "Nail salon"
+  },
+  "fd4c7009-d8d6-4c26-9a64-d852e201032a": {
+    "inferred_city": "Shanghai",
+    "inferred_activity": "Online shopping"
+  },
+  "c8f381c0-7cb3-49be-bd0f-f0045ed0d08b": {
+    "inferred_city": "Shenzhen",
+    "inferred_activity": "Subway payment"
+  },
+  "tx_0000B3KzJTDTHDYYIWY9uY": {
+    "inferred_city": "Abudhabi",
+    "inferred_activity": null
+  },
+  "tx_0000B3LKtVFzGWkDGjqFDl": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000B3LVRnN1QRIGWZzUHa": {
+    "inferred_city": null,
+    "inferred_activity": "Cafe purchase"
+  },
+  "tx_0000B3LevdMU6KZmSoxNtE": {
+    "inferred_city": null,
+    "inferred_activity": "Grocery shopping"
+  },
+  "285ed670-a835-43a4-9e23-f3be536be6d6": {
+    "inferred_city": null,
+    "inferred_activity": "Breakfast purchase"
+  },
+  "tx_0000B3O8gVrT5fU7JN5X3R": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000B3O9ISHKrMNb6hmtGL": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000B3OnFOqHAz0xne5IRv": {
+    "inferred_city": null,
+    "inferred_activity": "Public transport"
+  },
+  "tx_0000B3QDZ1NQv9dzupnP0s": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000B3QrAMfOcp8cdIrPy0": {
+    "inferred_city": null,
+    "inferred_activity": "Public transport"
+  },
+  "tx_0000B3UDC7DZobLbXIJqOw": {
+    "inferred_city": null,
+    "inferred_activity": "Candy purchase"
+  },
+  "tx_0000B3V1HCTGhttEytdpdD": {
+    "inferred_city": null,
+    "inferred_activity": "Public transport"
+  },
+  "tx_0000B3X5gQqHCW0hBZ46xo": {
+    "inferred_city": null,
+    "inferred_activity": "Public transport"
+  },
+  "tx_0000B3XjCYMYffW4ZT7kTD": {
+    "inferred_city": null,
+    "inferred_activity": "Fashion shopping"
+  },
+  "tx_0000B3Xk3NfFB8cS3SSD9V": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000B3Xnd5YSHpn9CV3ING": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000B3XoK03ya0h1l0ptvG": {
+    "inferred_city": null,
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000B3Xu9tduCBsIOE7QA7": {
+    "inferred_city": null,
+    "inferred_activity": "Smoke house purchase"
+  },
+  "tx_0000B3Xua8VfXheLjc4MBW": {
+    "inferred_city": null,
+    "inferred_activity": "Smoke house purchase"
+  },
+  "tx_0000B3XzV8odTePnaHAxwA": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000B3Y8QJ90Y0f5b3qDfq": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "tx_0000B3YPBj1njE9e3oMgFf": {
+    "inferred_city": null,
+    "inferred_activity": "Food purchase"
+  },
+  "fb4d9e6c-f10e-45a4-9cb0-b7d6cb2a23e5": {
+    "inferred_city": null,
+    "inferred_activity": "Food pickup"
+  },
+  "tx_0000B3ZwjyI0z5JYHaZbxT": {
+    "inferred_city": null,
+    "inferred_activity": "Train ticket"
+  },
+  "tx_0000B3Zwqie7XpCPh8KdRW": {
+    "inferred_city": null,
+    "inferred_activity": "Train ticket"
+  },
+  "tx_0000B3Zyhf57czxlgI2pLG": {
+    "inferred_city": null,
+    "inferred_activity": "Train ticket"
+  },
+  "tx_0000B3aL9X0zPXv5IghuUM": {
+    "inferred_city": "Amsterdam",
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000B3aX4G8jvJlqv2iDB5": {
+    "inferred_city": null,
+    "inferred_activity": "Travel booking"
+  },
+  "tx_0000B3dJrpyMfgJXAYV0p0": {
+    "inferred_city": null,
+    "inferred_activity": "Public transportation"
+  },
+  "0fb17886-8ab3-442d-95e2-7f986478fe3c": {
+    "inferred_city": "Belgium",
+    "inferred_activity": null
+  },
+  "tx_0000B3iOiAiCBCJJ20LZju": {
+    "inferred_city": "London",
+    "inferred_activity": "Railway travel"
+  },
+  "tx_0000B3jWQKHQrM1eFwsGoL": {
+    "inferred_city": null,
+    "inferred_activity": "Public transportation"
+  },
+  "tx_0000B3lbUyIwsbWUnCUlw9": {
+    "inferred_city": null,
+    "inferred_activity": "Public transportation"
+  },
+  "tx_0000B3mCL5gWHYX55dfjGb": {
+    "inferred_city": "Mechelen",
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000B3mDfMneSTwabvFluz": {
+    "inferred_city": "Gent",
+    "inferred_activity": null
+  },
+  "tx_0000B3mG4wgYNEiN3VG3PN": {
+    "inferred_city": "Antwerpen",
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000B3mPEjZItd8mADb1Ag": {
+    "inferred_city": null,
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000B3mSRiileqF7PEqyJP": {
+    "inferred_city": "Gent",
+    "inferred_activity": null
+  },
+  "182c1bdc-5d07-43c5-82ba-24363e2baf4a": {
+    "inferred_city": "Gent",
+    "inferred_activity": "Tourism"
+  },
+  "tx_0000B3mdVZxFIAEHZ7PMH4": {
+    "inferred_city": "Antwerpen",
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000B3mgt9rsEVkymH5ehH": {
+    "inferred_city": null,
+    "inferred_activity": "Entertainment"
+  },
+  "tx_0000B3n2t357f7lk2uDKK1": {
+    "inferred_city": "Gent",
+    "inferred_activity": "Accommodation"
+  },
+  "tx_0000B3nfRtG3yTT6SkkOmK": {
+    "inferred_city": null,
+    "inferred_activity": "Public transportation"
+  },
+  "tx_0000B3oAnzoNO2H1vIrvT0": {
+    "inferred_city": null,
+    "inferred_activity": "Sports"
+  },
+  "tx_0000B3oJSZ0Kl6KtG6pEoc": {
+    "inferred_city": "Amsterdam",
+    "inferred_activity": "Transportation"
+  },
+  "tx_0000B3oO06i8rKyufgqd2B": {
+    "inferred_city": "Amsterdam",
+    "inferred_activity": "Food purchase"
+  },
+  "b7f375cc-6e8d-4d95-94bc-1c68b2a86085": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "08ad0c46-e9a8-4fd4-81a7-92a2f7ce31ae": {
+    "inferred_city": "Antwerpen",
+    "inferred_activity": "Food purchase"
+  },
+  "tx_0000B3ozWe5zy1pkdw00wr": {
+    "inferred_city": "Amsterdam",
+    "inferred_activity": "Transportation"
+  },
+  "tx_0000B3pjXAe1XzvqGqhRg3": {
+    "inferred_city": null,
+    "inferred_activity": "Public transportation"
+  },
+  "tx_0000B3r6CJ13ieXeWrzete": {
+    "inferred_city": "Amsterdam",
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000B3rF4o9Kyt21K6z7uW": {
+    "inferred_city": "Amsterdam",
+    "inferred_activity": "Grocery shopping"
+  },
+  "0a181bde-300c-4452-a551-aa42d2fcf7a3": {
+    "inferred_city": "Amsterdam",
+    "inferred_activity": "Grocery shopping"
+  },
+  "tx_0000B3vwQWKB0afrXcqZs4": {
+    "inferred_city": null,
+    "inferred_activity": "Public transportation"
+  },
+  "2d7ce167-2138-4266-8a81-ae01fd692d1f": {
+    "inferred_city": null,
+    "inferred_activity": "Public transportation"
+  },
+  "2b8b1741-f370-4420-9545-20bee16ea143": {
+    "inferred_city": null,
+    "inferred_activity": "Public transportation"
+  },
+  "19a38e5b-449a-4d60-bde0-29bfbbd79f21": {
+    "inferred_city": "Amsterdam",
+    "inferred_activity": "Food purchase"
+  },
+  "de2734f1-3528-4e2f-b18e-56e966fd98d9": {
+    "inferred_city": "London",
+    "inferred_activity": "Railway transport"
+  },
+  "0645de81-e745-4663-8f45-4ae34bf08064": {
+    "inferred_city": "London",
+    "inferred_activity": "Public transport"
+  },
+  "78385f37-e133-4a6d-84e9-5a91af6f5c5a": {
+    "inferred_city": "London",
+    "inferred_activity": "Food and wine"
+  },
+  "62984248-2aa7-42be-9999-8adb909014ef": {
+    "inferred_city": "London",
+    "inferred_activity": "Food and wine"
+  },
+  "9b29cb2a-b4f8-42ae-b2bb-85455554d902": {
+    "inferred_city": "London",
+    "inferred_activity": "Food purchase"
+  },
+  "6a1029dc-3094-4faa-8940-204da4317e80": {
+    "inferred_city": "Oxford",
+    "inferred_activity": "Shopping"
+  },
+  "8fcfa2ee-dd74-4ad2-ad93-a6dd38f64628": {
+    "inferred_city": "London",
+    "inferred_activity": "Food purchase"
+  },
+  "e1c08090-ff02-4097-8665-f4017a93588c": {
+    "inferred_city": "London",
+    "inferred_activity": "Ride hailing"
+  },
+  "78d4a1f7-a4ce-4302-9175-7f3e49e94a58": {
+    "inferred_city": "London",
+    "inferred_activity": "Ride hailing"
+  },
+  "c81fe31c-14ca-4565-b44a-d5d931754334": {
+    "inferred_city": "Oxford",
+    "inferred_activity": "Food purchase"
+  },
+  "edacf5a9-8583-4f17-9eb5-4244c810f93a": {
+    "inferred_city": null,
+    "inferred_activity": "Online payment"
+  },
+  "26197ee4-9164-497a-800b-8b22783c0997": {
+    "inferred_city": "London",
+    "inferred_activity": "Ride hailing"
+  },
+  "41d62529-a6c7-4dfa-88e4-24a00fa3ada8": {
+    "inferred_city": "London",
+    "inferred_activity": "Bakery purchase"
+  },
+  "cff323f9-62a1-4993-8149-867104fc2f1c": {
+    "inferred_city": "London",
+    "inferred_activity": "Food purchase"
+  },
+  "365b41fb-bd4e-4cb0-ac7c-a5b1ef4256f7": {
+    "inferred_city": "Amsterdam",
+    "inferred_activity": "Train ticket"
+  },
+  "4f6c5d46-8121-4189-be86-99dcf1547c54": {
+    "inferred_city": null,
+    "inferred_activity": "Online payment"
+  },
+  "5a12ec7c-ea3c-4258-9212-b70e567509a2": {
+    "inferred_city": null,
+    "inferred_activity": "Food purchase"
+  },
+  "69cd7202-ed97-4b2a-a2c6-ac21ae2155d2": {
+    "inferred_city": null,
+    "inferred_activity": "Online payment"
+  },
+  "fa6664a5-5433-42e8-b09a-64b3fa8bde01": {
+    "inferred_city": "Amsterdam",
+    "inferred_activity": "Attraction ticket"
+  },
+  "e6695b8a-be3d-4130-82d8-bfdc290daaa8": {
+    "inferred_city": "Amsterdam",
+    "inferred_activity": "Grocery shopping"
+  },
+  "3329356a-e18d-4d51-b660-6d9715d6424f": {
+    "inferred_city": null,
+    "inferred_activity": null
+  },
+  "8a7ce230-2645-4582-959c-687bd514f480": {
+    "inferred_city": "Swords",
+    "inferred_activity": "Flight booking"
+  },
+  "632ad2ac-44cc-49e8-9ac9-6bbb70ca4353": {
+    "inferred_city": "Dublin",
+    "inferred_activity": "Flight booking"
+  },
+  "ee718bb6-1c89-4b8c-95b9-a62aa4ff310d": {
+    "inferred_city": "Amsterdam",
+    "inferred_activity": "Grocery shopping"
+  },
+  "5837bf0f-fee6-41ed-910c-229a6585e598": {
+    "inferred_city": "Amsterdam",
+    "inferred_activity": "Coffee purchase"
+  },
+  "88dc951b-4a4d-41e5-ac93-e0bff4b36588": {
+    "inferred_city": null,
+    "inferred_activity": "Food purchase"
+  },
+  "9ef7d670-2ebc-4627-8af4-b8a2145df60d": {
+    "inferred_city": null,
+    "inferred_activity": "Food purchase"
+  },
+  "5b271383-e126-4bfd-b95c-30505a401468": {
+    "inferred_city": null,
+    "inferred_activity": null
+  }
+}

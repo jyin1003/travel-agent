@@ -1,0 +1,156 @@
+{
+  "Q1": {
+    "ground_truth_ids": [],
+    "candidates": [],
+    "note": "no results found \u2014 check query/filters"
+  },
+  "Q2": {
+    "ground_truth_ids": [
+      "txn_663655f4-7d0b-4824-ab0e-19ca65fd2bcc"
+    ],
+    "candidates": [
+      {
+        "id": "txn_663655f4-7d0b-4824-ab0e-19ca65fd2bcc",
+        "source_type": "transaction",
+        "destination": "Tokyo",
+        "date": "2025-12-19",
+        "preview": "On 2025-12-19T11:58:30+00:00 debit of 1.95 at S-PERIA INN NIHOMBASHI, TOKYO (Holidays & Travel) at TOKYO [Up Bank] [cate"
+      }
+    ]
+  },
+  "Q3": {
+    "ground_truth_ids": [
+      "txn_5b975cf5-dba9-4264-aa43-14b39122baa9",
+      "txn_5d540925-67ba-4084-9b04-92551f5a5c1b"
+    ],
+    "candidates": [
+      {
+        "id": "txn_5b975cf5-dba9-4264-aa43-14b39122baa9",
+        "source_type": "transaction",
+        "destination": "Copenhagen",
+        "date": "2025-11-19",
+        "preview": "On 2025-11-19T14:18:05+00:00 debit of 21.89 at Zeleste \u2014 Zettle_*Danish Souv,Copenhagen (Restaurants & Cafes) at Copenha"
+      },
+      {
+        "id": "txn_5d540925-67ba-4084-9b04-92551f5a5c1b",
+        "source_type": "transaction",
+        "destination": "Copenhagen",
+        "date": "2025-11-21",
+        "preview": "On 2025-11-21T19:19:10+00:00 debit of 22.8 at GARBANZO APS, KXBENHAVN (Takeaway) at KXBENHAVN [Up Bank] [activity: Food "
+      }
+    ],
+    "note": "auto-generated from top-2 results for: Copenhagen trip dates"
+  },
+  "Q4": {
+    "ground_truth_ids": [],
+    "candidates": [],
+    "note": "no results found \u2014 check query/filters"
+  },
+  "Q5": {
+    "ground_truth_ids": [
+      "3b7eaab8-3715-4013-9c18-417ea7bf9cef",
+      "txn_tx_0000AxhIvN9KB2056Aja2z"
+    ],
+    "candidates": [
+      {
+        "id": "map_ChIJs7KGJoF1nkcRbvHy7HEBKiU",
+        "source_type": "map",
+        "destination": "Germany",
+        "date": null,
+        "preview": "Viktualienmarkt located at Viktualienmarkt 3, 80331 M\u00fcnchen, Germany [farmers_market, market, point_of_interest, establi"
+      },
+      {
+        "id": "txn_tx_0000AxhIvN9KB2056Aja2z",
+        "source_type": "transaction",
+        "destination": "Oxford",
+        "date": "2025-08-30",
+        "preview": "On 2025-08-30T13:01:23+00:00 debit of 3.28 at Ticktock Cafe (Eating out) at 3 Cowley Road [Monzo] [category: food & drin"
+      },
+      {
+        "id": "a6e68b6e-4b99-4bfe-a2c0-74c16a0b8fdf",
+        "source_type": "photo",
+        "destination": null,
+        "date": null,
+        "preview": "./data/raw/photos\\a6e68b6e-4b99-4bfe-a2c0-74c16a0b8fdf.jpg"
+      },
+      {
+        "id": "3b7eaab8-3715-4013-9c18-417ea7bf9cef",
+        "source_type": "photo_caption",
+        "destination": null,
+        "date": "2026-01-23",
+        "preview": "The image shows a table with various food items on it, including a bowl of soup, a plate of food, and several skewers of"
+      },
+      {
+        "id": "txn_tx_0000AwcpXCba0XWgasBmoV",
+        "source_type": "transaction",
+        "destination": "London",
+        "date": "2025-07-29",
+        "preview": "On 2025-07-29T11:21:07+00:00 debit of 7.13 at Tian Tian Market - Can (Groceries) at 16-17 Canada Square [Monzo] [activit"
+      }
+    ],
+    "note": "auto-generated from top-5 results for: night market eating food"
+  },
+  "Q6": {
+    "ground_truth_ids": [
+      "311410cc-138e-4764-bb6c-0209c263a454"
+    ],
+    "candidates": [
+      {
+        "id": "311410cc-138e-4764-bb6c-0209c263a454",
+        "source_type": "photo_caption",
+        "destination": null,
+        "date": "2025-11-18",
+        "preview": "The image shows a dining table with two plates of food on it. One plate contains fried noodles and meat, while the other"
+      },
+      {
+        "id": "map_ChIJ4dQg1DrzT0YRohg_7vqGzRY",
+        "source_type": "map",
+        "destination": "Sweden",
+        "date": null,
+        "preview": "Linn\u00e9staden located at Linn\u00e9staden, 413 04 G\u00f6teborg, Sweden [sublocality_level_2, sublocality, political] Note: dinner"
+      },
+      {
+        "id": "a24a2587-ae48-4871-be66-cb3c5c74fad7",
+        "source_type": "photo",
+        "destination": "Ashland",
+        "date": null,
+        "preview": "./data/raw/photos\\a24a2587-ae48-4871-be66-cb3c5c74fad7.jpg"
+      },
+      {
+        "id": "bdbfbb30-3c79-411f-966c-e4812a1834fb",
+        "source_type": "photo_caption",
+        "destination": "Bologna",
+        "date": "2025-08-17",
+        "preview": "The image shows a dining table with four white plates containing different types of food arranged on it. There are also "
+      },
+      {
+        "id": "map_ChIJIdTdlXNTUkYRF4WbA6GBHl8",
+        "source_type": "map",
+        "destination": "Denmark",
+        "date": null,
+        "preview": "Meatpacking District, Copenhagen located at Meatpacking District, Copenhagen, Copenhagen, Denmark [neighborhood, politic"
+      }
+    ],
+    "note": "auto-generated from top-5 results for: dinner restaurant expensive meal"
+  },
+  "Q7": {
+    "ground_truth_ids": [],
+    "note": "multi-hop \u2014 judge only"
+  },
+  "Q8": {
+    "ground_truth_ids": [],
+    "note": "multi-hop \u2014 judge only"
+  },
+  "Q9": {
+    "ground_truth_ids": [],
+    "note": "conversational \u2014 judge only"
+  },
+  "Q10": {
+    "ground_truth_ids": [],
+    "note": "conversational \u2014 judge only"
+  },
+  "Q11": {
+    "ground_truth_ids": [],
+    "note": "conversational \u2014 judge only"
+  }
+}
