@@ -1,8 +1,42 @@
 {
   "Q1": {
-    "ground_truth_ids": [],
-    "candidates": [],
-    "note": "no results found \u2014 check query/filters"
+    "ground_truth_ids": [
+      "txn_1143e89c-58d9-4a4b-9578-539880ebfadc",
+      "txn_1254db2f-9374-449d-8b9d-3758f5817097",
+      "txn_2ae10413-7ec8-4775-818f-1cd69c631934",
+      "txn_388b1857-fe48-4e25-9543-bcd6205e8747"
+    ],
+    "candidates": [
+      {
+        "id": "txn_1143e89c-58d9-4a4b-9578-539880ebfadc",
+        "source_type": "transaction",
+        "destination": "TOUKIYOUTO",
+        "date": "2025-12-16",
+        "preview": "On 2025-12-16T04:49:14+00:00 debit of 16.81 at Japan Railway East \u2014 EAST JAPAN RAILWAY ,TOUKIYOUTO (Public Transport) at"
+      },
+      {
+        "id": "txn_1254db2f-9374-449d-8b9d-3758f5817097",
+        "source_type": "transaction",
+        "destination": null,
+        "date": "2025-12-22",
+        "preview": "On 2025-12-22T22:14:48+00:00 debit of 19.61 at Japan Railway East \u2014 EAST JAPAN RAILWAY ,TOUKIYOUTO (Public Transport) at"
+      },
+      {
+        "id": "txn_2ae10413-7ec8-4775-818f-1cd69c631934",
+        "source_type": "transaction",
+        "destination": null,
+        "date": "2025-12-22",
+        "preview": "On 2025-12-22T21:56:34+00:00 debit of 19.61 at Japan Railway East \u2014 JR EAST, TOUKIYOUTO (Public Transport) at TOUKIYOUTO"
+      },
+      {
+        "id": "txn_388b1857-fe48-4e25-9543-bcd6205e8747",
+        "source_type": "transaction",
+        "destination": "Kyoto",
+        "date": "2025-12-27",
+        "preview": "On 2025-12-27T01:51:16+00:00 debit of 115.02 at Hozugawa River Boat Ride (Hozugawa Kudari) \u2014 HOZUGAWAKUDARI, KYOTO (Groc"
+      }
+    ],
+    "note": "filtered for 4"
   },
   "Q2": {
     "ground_truth_ids": [
@@ -16,12 +50,13 @@
         "date": "2025-12-19",
         "preview": "On 2025-12-19T11:58:30+00:00 debit of 1.95 at S-PERIA INN NIHOMBASHI, TOKYO (Holidays & Travel) at TOKYO [Up Bank] [cate"
       }
-    ]
+    ],
+    "note": "filtered for 1"
   },
   "Q3": {
     "ground_truth_ids": [
       "txn_5b975cf5-dba9-4264-aa43-14b39122baa9",
-      "txn_5d540925-67ba-4084-9b04-92551f5a5c1b"
+      "c871ea1d-2fc3-43bc-a5fc-9a7f7ac405ac"
     ],
     "candidates": [
       {
@@ -32,67 +67,83 @@
         "preview": "On 2025-11-19T14:18:05+00:00 debit of 21.89 at Zeleste \u2014 Zettle_*Danish Souv,Copenhagen (Restaurants & Cafes) at Copenha"
       },
       {
-        "id": "txn_5d540925-67ba-4084-9b04-92551f5a5c1b",
-        "source_type": "transaction",
+        "id": "c871ea1d-2fc3-43bc-a5fc-9a7f7ac405ac",
+        "source_type": "photo_caption",
         "destination": "Copenhagen",
-        "date": "2025-11-21",
-        "preview": "On 2025-11-21T19:19:10+00:00 debit of 22.8 at GARBANZO APS, KXBENHAVN (Takeaway) at KXBENHAVN [Up Bank] [activity: Food "
+        "date": "2025-11-22",
+        "preview": "The image shows a computer screen displaying a receipt for an order at a restaurant. The receipt is white with black tex"
       }
     ],
-    "note": "auto-generated from top-2 results for: Copenhagen trip dates"
+    "note": "filtered for 2"
   },
   "Q4": {
-    "ground_truth_ids": [],
-    "candidates": [],
-    "note": "no results found \u2014 check query/filters"
-  },
-  "Q5": {
     "ground_truth_ids": [
-      "3b7eaab8-3715-4013-9c18-417ea7bf9cef",
-      "txn_tx_0000AxhIvN9KB2056Aja2z"
+      "ff0a49c1-c72a-44e9-b09a-d0fc16b0dbc1",
+      "9bf80ebf-1917-445f-8b9b-ab0f75056d26",
+      "66690413-9de6-4abc-b89d-0876e8b8afac",
+      "95286e63-40f8-42e5-8a23-38633b60d5f4",
+      "a7a2f159-ed76-460e-84d4-daf3f426dfec"
     ],
     "candidates": [
       {
-        "id": "map_ChIJs7KGJoF1nkcRbvHy7HEBKiU",
-        "source_type": "map",
-        "destination": "Germany",
-        "date": null,
-        "preview": "Viktualienmarkt located at Viktualienmarkt 3, 80331 M\u00fcnchen, Germany [farmers_market, market, point_of_interest, establi"
+        "id": "ff0a49c1-c72a-44e9-b09a-d0fc16b0dbc1",
+        "source_type": "photo_caption",
+        "destination": "Tegernsee",
+        "date": "2025-08-26",
+        "preview": "The image shows a woman wearing a blue swimsuit sitting on a boat in a lake. She is holding onto the side of the boat wi"
       },
       {
-        "id": "txn_tx_0000AxhIvN9KB2056Aja2z",
-        "source_type": "transaction",
-        "destination": "Oxford",
-        "date": "2025-08-30",
-        "preview": "On 2025-08-30T13:01:23+00:00 debit of 3.28 at Ticktock Cafe (Eating out) at 3 Cowley Road [Monzo] [category: food & drin"
-      },
-      {
-        "id": "a6e68b6e-4b99-4bfe-a2c0-74c16a0b8fdf",
-        "source_type": "photo",
-        "destination": null,
-        "date": null,
-        "preview": "./data/raw/photos\\a6e68b6e-4b99-4bfe-a2c0-74c16a0b8fdf.jpg"
-      },
-      {
-        "id": "3b7eaab8-3715-4013-9c18-417ea7bf9cef",
+        "id": "9bf80ebf-1917-445f-8b9b-ab0f75056d26",
         "source_type": "photo_caption",
         "destination": null,
-        "date": "2026-01-23",
-        "preview": "The image shows a table with various food items on it, including a bowl of soup, a plate of food, and several skewers of"
+        "date": "2025-11-17",
+        "preview": "The image shows a person standing on top of a rock with their back to the camera, overlooking a beautiful sunset over wa"
       },
       {
-        "id": "txn_tx_0000AwcpXCba0XWgasBmoV",
-        "source_type": "transaction",
-        "destination": "London",
-        "date": "2025-07-29",
-        "preview": "On 2025-07-29T11:21:07+00:00 debit of 7.13 at Tian Tian Market - Can (Groceries) at 16-17 Canada Square [Monzo] [activit"
+        "id": "66690413-9de6-4abc-b89d-0876e8b8afac",
+        "source_type": "photo_caption",
+        "destination": "Kameoka",
+        "date": "2025-12-27",
+        "preview": "The image shows a group of people on an indoor boat tour in front of a picturesque mountain range. There are at least si"
+      },
+      {
+        "id": "95286e63-40f8-42e5-8a23-38633b60d5f4",
+        "source_type": "photo_caption",
+        "destination": "Fujiyoshida",
+        "date": "2025-12-23",
+        "preview": "The image shows a red pagoda with a green roof situated in an outdoor setting. In the background, there is a snow-capped"
+      },
+      {
+        "id": "a7a2f159-ed76-460e-84d4-daf3f426dfec",
+        "source_type": "photo_caption",
+        "destination": null,
+        "date": "2025-11-17",
+        "preview": "The image shows a person climbing up a wooden fence at sunset. The setting sun casts long shadows on the scene, creating"
       }
     ],
-    "note": "auto-generated from top-5 results for: night market eating food"
+    "note": "filtered for 5"
+  },
+  "Q5": {
+    "ground_truth_ids": [
+      "fe1c1c33-9e28-4bd1-9f7b-6ce56722ccf3"
+    ],
+    "candidates": [
+      {
+        "id": "fe1c1c33-9e28-4bd1-9f7b-6ce56722ccf3",
+        "source_type": "photo_caption",
+        "destination": "Amsterdam",
+        "date": "2026-02-21",
+        "preview": "The image shows a person holding up a plate of food in front of an indoor market with various food items on display. The"
+      }
+    ],
+    "note": "filtered for 1"
   },
   "Q6": {
     "ground_truth_ids": [
-      "311410cc-138e-4764-bb6c-0209c263a454"
+      "311410cc-138e-4764-bb6c-0209c263a454",
+      "bdbfbb30-3c79-411f-966c-e4812a1834fb",
+      "2ddf8bdf-b1d0-4633-acca-d56fddea6fe5",
+      "400318a3-5cf5-4b49-95c0-49ba672402fa"
     ],
     "candidates": [
       {
@@ -103,20 +154,6 @@
         "preview": "The image shows a dining table with two plates of food on it. One plate contains fried noodles and meat, while the other"
       },
       {
-        "id": "map_ChIJ4dQg1DrzT0YRohg_7vqGzRY",
-        "source_type": "map",
-        "destination": "Sweden",
-        "date": null,
-        "preview": "Linn\u00e9staden located at Linn\u00e9staden, 413 04 G\u00f6teborg, Sweden [sublocality_level_2, sublocality, political] Note: dinner"
-      },
-      {
-        "id": "a24a2587-ae48-4871-be66-cb3c5c74fad7",
-        "source_type": "photo",
-        "destination": "Ashland",
-        "date": null,
-        "preview": "./data/raw/photos\\a24a2587-ae48-4871-be66-cb3c5c74fad7.jpg"
-      },
-      {
         "id": "bdbfbb30-3c79-411f-966c-e4812a1834fb",
         "source_type": "photo_caption",
         "destination": "Bologna",
@@ -124,33 +161,47 @@
         "preview": "The image shows a dining table with four white plates containing different types of food arranged on it. There are also "
       },
       {
-        "id": "map_ChIJIdTdlXNTUkYRF4WbA6GBHl8",
-        "source_type": "map",
-        "destination": "Denmark",
-        "date": null,
-        "preview": "Meatpacking District, Copenhagen located at Meatpacking District, Copenhagen, Copenhagen, Denmark [neighborhood, politic"
+        "id": "2ddf8bdf-b1d0-4633-acca-d56fddea6fe5",
+        "source_type": "photo_caption",
+        "destination": null,
+        "date": "2025-11-18",
+        "preview": "The image shows a group of people sitting at tables in what appears to be an indoor restaurant setting with red walls an"
+      },
+      {
+        "id": "b50a0c14-5ab3-4d35-95ec-76231be47930",
+        "source_type": "photo_caption",
+        "destination": "Amsterdam",
+        "date": "2026-02-18",
+        "preview": "The image shows a dining table with three plates of food on it. On the left side is a plate with a piece of meat covered"
+      },
+      {
+        "id": "400318a3-5cf5-4b49-95c0-49ba672402fa",
+        "source_type": "photo_caption",
+        "destination": "Amsterdam",
+        "date": "2026-03-11",
+        "preview": "The image shows a dining table with various food items on it. There is a plate of food in front of a silver knife and fo"
       }
     ],
-    "note": "auto-generated from top-5 results for: dinner restaurant expensive meal"
+    "note": "filtered for 4"
   },
   "Q7": {
     "ground_truth_ids": [],
-    "note": "multi-hop \u2014 judge only"
+    "note": "multi-hop - judge only"
   },
   "Q8": {
     "ground_truth_ids": [],
-    "note": "multi-hop \u2014 judge only"
+    "note": "multi-hop - judge only"
   },
   "Q9": {
     "ground_truth_ids": [],
-    "note": "conversational \u2014 judge only"
+    "note": "conversational - judge only"
   },
   "Q10": {
     "ground_truth_ids": [],
-    "note": "conversational \u2014 judge only"
+    "note": "conversational - judge only"
   },
   "Q11": {
     "ground_truth_ids": [],
-    "note": "conversational \u2014 judge only"
+    "note": "conversational - judge only"
   }
 }

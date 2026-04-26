@@ -19,18 +19,30 @@ The public `retrieve()` dispatcher is the single entry point for LangGraph
 agent tools.  Pass `mode` to select the path; metadata pre-filters are
 forwarded to ChromaDB BEFORE the vector search.
 
+Broad retrieval strategy
+------------------------
+A key failure mode is city-tagged data being missed by country-level queries
+(e.g. documents tagged destination="Tokyo" not found for query="Japan transport").
+
+To address this:
+- `infer_country_from_city()` maps known cities → countries so filters can be
+  widened from city → country when needed.
+- `broad_retrieve()` runs retrieve() with NO metadata filter at high k, then
+  post-filters by country or city substring match.  Used as a fallback when
+  filtered retrieval returns too few results.
+- The `retrieve()` dispatcher accepts `auto_expand=True` (default) to
+  automatically fall back to broad retrieval when filtered results are sparse.
+
 Trade-off notes
 ---------------
 - BM25 adds ~40-80 ms on first call (corpus build from ChromaDB).  Corpus
   is cached as a module-level singleton so subsequent calls are fast.
 - Caption-mediated path gives text-model recall on images where CLIP's
-  shared embedding space is weak (long descriptive captions vs. short
-  visual queries).
-- RRF avoids the need to tune a scalar weighting parameter between modalities;
-  use fusion="score" + text_weight/image_weight for the ablation variant.
+  shared embedding space is weak.
+- RRF avoids the need to tune a scalar weighting parameter between modalities.
 - Metadata pre-filters reduce the candidate pool before vector search,
-  improving precision without sacrificing recall on the filtered subset.
-  Do NOT post-filter results — that silently reduces k.
+  improving precision.  Do NOT post-filter results — that silently reduces k.
+  Exception: broad_retrieve() intentionally does a wide fetch then post-filters.
 """
 
 from __future__ import annotations
@@ -49,11 +61,102 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
+# ─────────────────────────────────────────────────────────────────────────────
+# City → Country expansion map
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Maps lowercase city/suburb names to their country.
+# Used to widen a city-level filter to a country-level search so that
+# documents tagged with any city in that country are retrieved.
+_CITY_TO_COUNTRY: dict[str, str] = {
+    # Japan
+    "tokyo": "Japan", "toukiyouto": "Japan", "osaka": "Japan",
+    "kyoto": "Japan",
+    # UK
+    "london": "United Kingdom", "edinburgh": "United Kingdom",
+    "oxford": "United Kingdom",
+    # Italy
+    "milan": "Italy", "rome": "Italy", "florence": "Italy",
+    "Bologna": "Italy", "venice": "Italy",
+    # France
+    "paris": "France",
+    # Germany
+    "munich": "Germany",
+    # Sweden
+    "goteborg": "Sweden", "gothenburg": "Sweden",
+    "skovde": "Sweden", "vastra frolunda": "Sweden",
+    # Denmark
+    "copenhagen": "Denmark", "koebenhavn": "Denmark",
+    "kobenhavn": "Denmark", "kxbenhavn": "Denmark",
+    # Belgium
+    "brussels": "Belgium", "antwerpen": "Belgium", "antwerp": "Belgium",
+    "gent": "Belgium", "ghent": "Belgium", "mechelen": "Belgium",
+    # Netherlands
+    "amsterdam": "Netherlands", "gouda": "Netherlands",
+    # Australia
+    "sydney": "Australia", "melbourne": "Australia",
+    "brisbane": "Australia",
+    # China
+    "shanghai": "China", "beijing": "China", "shenzhen": "China",
+    "chongqing": "China", "guangzhou": "China", "harbin": "China",
+    "hangzhou": "China", "shenyang": "China",
+}
+
+# Maps lowercase country names / aliases to canonical country strings
+# so that "japan", "uk", "england", etc. all resolve consistently.
+_COUNTRY_ALIASES: dict[str, str] = {
+    "japan": "Japan",
+    "uk": "United Kingdom", "england": "United Kingdom",
+    "scotland": "United Kingdom", "britain": "United Kingdom",
+    "great britain": "United Kingdom",
+    "italy": "Italy",
+    "france": "France",
+    "germany": "Germany",
+    "sweden": "Sweden",
+    "denmark": "Denmark",
+    "belgium": "Belgium",
+    "netherlands": "Netherlands", "holland": "Netherlands",
+    "australia": "Australia",
+    "china": "China",
+}
+
+# Reverse map: country → set of known city strings (lowercase)
+_COUNTRY_TO_CITIES: dict[str, set[str]] = {}
+for _city, _country in _CITY_TO_COUNTRY.items():
+    _COUNTRY_TO_CITIES.setdefault(_country, set()).add(_city)
+
+
+def infer_country_from_city(city: str) -> Optional[str]:
+    """Return the canonical country for a city name, or None if unknown."""
+    return _CITY_TO_COUNTRY.get(city.lower().strip())
+
+
+def cities_for_country(country: str) -> set[str]:
+    """Return all known city strings for a country (lowercase)."""
+    canonical = _COUNTRY_ALIASES.get(country.lower().strip(), country)
+    return _COUNTRY_TO_CITIES.get(canonical, set())
+
+
+def resolve_country(term: str) -> Optional[str]:
+    """
+    Given any geographic term (city or country alias), return the canonical
+    country string, or None if unrecognised.
+    """
+    t = term.lower().strip()
+    if t in _COUNTRY_ALIASES:
+        return _COUNTRY_ALIASES[t]
+    if t in _CITY_TO_COUNTRY:
+        return _CITY_TO_COUNTRY[t]
+    return None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # BM25 corpus — built lazily from ChromaDB, cached as module-level singleton
+# ─────────────────────────────────────────────────────────────────────────────
 
 _bm25_lock = threading.Lock()
-_bm25_index = None        # rank_bm25.BM25Okapi instance
-_bm25_corpus: list[dict] = []   # parallel list of ChromaDB result dicts
+_bm25_index = None
+_bm25_corpus: list[dict] = []
 
 
 def _get_bm25_index():
@@ -92,13 +195,9 @@ def _get_bm25_index():
             _bm25_corpus = []
             _bm25_index = BM25Okapi([[]])
             return _bm25_index, _bm25_corpus
-        
-        if total > 0:
-            log.info(f"text collection count = {total}")
-        else:
-            log.info("text collection empty — returning empty BM25 index")
 
-        # Fetch entire text corpus from ChromaDB (no embedding needed)
+        log.info(f"text collection count = {total}")
+
         raw = collection.get(include=["documents", "metadatas"])
         docs    = raw.get("documents", [])
         metas   = raw.get("metadatas", [])
@@ -109,32 +208,29 @@ def _get_bm25_index():
             for doc_id, doc, meta in zip(ids, docs, metas)
         ]
 
-        # Tokenise: lowercase split — simple but effective for travel notes
         tokenised = [doc.lower().split() for doc in docs]
         _bm25_index = BM25Okapi(tokenised)
-        
-        log.info(f"BM25 index built — {len(_bm25_corpus)} docs")
 
+        log.info(f"BM25 index built — {len(_bm25_corpus)} docs")
         return _bm25_index, _bm25_corpus
 
 
 def _reset_bm25_cache() -> None:
     """Invalidate the BM25 cache — call after re-indexing."""
     global _bm25_index, _bm25_corpus
-    
     log.info("Resetting BM25 cache...")
     with _bm25_lock:
         _bm25_index = None
         _bm25_corpus = []
 
 
-# ---------------------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────────────────
 # BM25 query
-# ---------------------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────────────────
 
 def query_bm25(
     query: str,
-    k: int = 5,
+    k: int = 10,
     where: Optional[dict] = None,
 ) -> list[dict]:
     """
@@ -142,24 +238,17 @@ def query_bm25(
 
     `where` is applied as a post-filter on metadata here (unlike ChromaDB
     pre-filters).  BM25 has no native metadata filtering — the corpus is
-    small enough that post-filtering is acceptable.  If the filtered result
-    set is smaller than k, all matching documents are returned.
-
-    Returns results in the same dict schema as common._format_results():
-        {id, document, metadata, distance, score, bm25_score}
+    small enough that post-filtering is acceptable.
     """
     log.info(f"BM25 query start — query={query!r}, k={k}, where={where}")
-    
-    bm25, corpus = _get_bm25_index()
 
+    bm25, corpus = _get_bm25_index()
     if not corpus:
-        log.info("BM25 query skipped — corpus is empty")
         return []
 
     tokens = query.lower().split()
-    raw_scores = bm25.get_scores(tokens)     # float array, length == len(corpus)
+    raw_scores = bm25.get_scores(tokens)
 
-    # Pair each doc with its BM25 score and apply optional metadata filter
     scored = []
     for i, score in enumerate(raw_scores):
         if score <= 0:
@@ -169,21 +258,18 @@ def query_bm25(
             continue
         scored.append({**doc, "bm25_score": round(float(score), 4)})
 
-    # Sort descending, take top k
     scored.sort(key=lambda x: x["bm25_score"], reverse=True)
-    
-    log.info(f"BM25 matches after filtering = {len(scored)}")
-    log.info(f"BM25 query complete — returned {len(scored[:k])} results")
-    
+    log.info(f"BM25 matches after filtering = {len(scored)}, returning {len(scored[:k])}")
     return scored[:k]
 
 
 def _metadata_matches(meta: dict, where: dict) -> bool:
     """
     Simple equality filter matching ChromaDB's `where` dict syntax.
-    Supports plain equality: {"source_type": "map"} and
-    $in operator:           {"source_type": {"$in": ["map", "transaction"]}}
+    Supports: plain equality, $in, $eq, $ne, $and.
     """
+    if "$and" in where:
+        return all(_metadata_matches(meta, sub) for sub in where["$and"])
     for key, condition in where.items():
         val = meta.get(key)
         if isinstance(condition, dict):
@@ -200,24 +286,18 @@ def _metadata_matches(meta: dict, where: dict) -> bool:
     return True
 
 
+# ─────────────────────────────────────────────────────────────────────────────
 # Fusion helpers
+# ─────────────────────────────────────────────────────────────────────────────
 
 def _rrf_fuse(
-    result_lists: list[tuple[list[dict], str]],   # [(results, source_label), ...]
+    result_lists: list[tuple[list[dict], str]],
     rrf_k: int = 60,
-    top_k: int = 5,
+    top_k: int = 10,
 ) -> list[dict]:
     """
     Reciprocal Rank Fusion over an arbitrary number of ranked lists.
-
     score(d) = Σ_i  1 / (rrf_k + rank_i(d))
-
-    `source_label` for each list is used to populate the 'source' field.
-    If a document appears in multiple lists its source becomes "text+image"
-    or the labels joined with "+".
-
-    RRF is chosen over scalar weighting because it requires no tuning and
-    is robust to different score scales across modalities.
     """
     scores:     dict[str, float] = {}
     result_map: dict[str, dict]  = {}
@@ -244,18 +324,10 @@ def _rrf_fuse(
 
 
 def _score_fuse(
-    result_lists: list[tuple[list[dict], str, float]],  # [(results, label, weight), ...]
-    top_k: int = 5,
+    result_lists: list[tuple[list[dict], str, float]],
+    top_k: int = 10,
 ) -> list[dict]:
-    """
-    Weighted score fusion.  Each list entry is (results, source_label, weight).
-    Use this as the ablation variant to compare against RRF.
-
-    score(d) = Σ_i  weight_i * cosine_similarity_i(d)
-
-    Scores must be in [0, 1]; the 'score' field from _format_results() qualifies.
-    BM25 scores are normalised to [0, 1] by dividing by the list maximum.
-    """
+    """Weighted score fusion (ablation variant)."""
     scores:     dict[str, float] = {}
     result_map: dict[str, dict]  = {}
     sources:    dict[str, set]   = {}
@@ -263,11 +335,9 @@ def _score_fuse(
     for results, label, weight in result_lists:
         if not results:
             continue
-        # Normalise BM25 scores to [0,1] so they're comparable with cosine sims
         max_s = max((r.get("bm25_score", r.get("score", 0.0)) for r in results), default=1.0)
         if max_s == 0:
             max_s = 1.0
-
         for r in results:
             uid  = r["id"]
             raw  = r.get("bm25_score", r.get("score", 0.0))
@@ -288,102 +358,55 @@ def _score_fuse(
     ]
 
 
+# ─────────────────────────────────────────────────────────────────────────────
 # Single-path query functions
+# ─────────────────────────────────────────────────────────────────────────────
 
-def query_text_dense(
-    query: str,
-    k: int = 5,
-    where: Optional[dict] = None,
-) -> list[dict]:
-    """
-    Dense text retrieval via sentence-transformer cosine similarity.
-    Pre-filters with `where` BEFORE the vector search (ChromaDB native).
-    """
+def query_text_dense(query: str, k: int = 10, where: Optional[dict] = None) -> list[dict]:
+    """Dense text retrieval via sentence-transformer cosine similarity."""
     return common.query_text_index(query, k=k, where=where)
 
 
-def query_text_bm25(
-    query: str,
-    k: int = 5,
-    where: Optional[dict] = None,
-) -> list[dict]:
-    """
-    Sparse BM25 keyword retrieval.  `where` is applied as a post-filter.
-    Good for exact entity matches: city names, dates, currency amounts.
-    """
+def query_text_bm25(query: str, k: int = 10, where: Optional[dict] = None) -> list[dict]:
+    """Sparse BM25 keyword retrieval."""
     return query_bm25(query, k=k, where=where)
 
 
-def query_image_clip(
-    query: str,
-    k: int = 5,
-    where: Optional[dict] = None,
-) -> list[dict]:
-    """
-    Cross-modal CLIP retrieval: encodes the text query with CLIP's text
-    encoder to retrieve visually matching images.
-    Best for short visual descriptions: "beach at sunset", "crowded market".
-    """
+def query_image_clip(query: str, k: int = 10, where: Optional[dict] = None) -> list[dict]:
+    """Cross-modal CLIP retrieval."""
     return common.query_image_index(query, k=k, where=where)
 
 
-def query_image_caption(
-    query: str,
-    k: int = 5,
-    where: Optional[dict] = None,
-) -> list[dict]:
-    """
-    Caption-mediated image retrieval: searches text_index filtered to
-    source_type="photo".  Uses sentence-transformer on the caption text,
-    not the CLIP embedding space.
-
-    Trade-off vs CLIP path:
-    - CLIP is better for short visual queries matching learned image features
-    - Caption path is better for long descriptive queries and abstract concepts
-        where CLIP's shared space is weaker ("a photo from my trip when I felt
-        lost") — the rich caption text carries more semantic signal.
-    """
-    caption_filter: dict = {"source_type": "photo"}
+def query_image_caption(query: str, k: int = 10, where: Optional[dict] = None) -> list[dict]:
+    """Caption-mediated image retrieval via sentence-transformer on photo captions."""
+    caption_filter: dict = {"source_type": "photo_caption"}
     if where:
-        # Merge caller's filter with source_type constraint
-        caption_filter = {"$and": [{"source_type": {"$eq": "photo"}}, where]}
+        caption_filter = {"$and": [{"source_type": {"$eq": "photo_caption"}}, where]}
     return common.query_text_index(query, k=k, where=caption_filter)
 
 
-# Hybrid query functions (fuse multiple paths)
+# ─────────────────────────────────────────────────────────────────────────────
+# Hybrid query functions
+# ─────────────────────────────────────────────────────────────────────────────
 
 def text_hybrid_query(
     query: str,
-    k: int = 5,
+    k: int = 10,
     where: Optional[dict] = None,
     fusion: Literal["rrf", "score"] = "rrf",
     rrf_k: int = 60,
     dense_weight: float = 0.6,
     bm25_weight: float = 0.4,
 ) -> list[dict]:
-    """
-    Hybrid text retrieval: fuse dense + BM25.
-
-    Why this combination?
-    - Dense captures semantic paraphrases ("eatery" ≈ "restaurant")
-    - BM25 catches exact entity tokens missed by dense ("Fushimi Inari")
-    - RRF default avoids tuning dense_weight/bm25_weight
-
-    Use fusion="score" with explicit weights for ablation experiments.
-    """  
+    """Hybrid text retrieval: fuse dense + BM25."""
     dense_results = query_text_dense(query, k=k, where=where)
     bm25_results  = query_text_bm25(query,  k=k, where=where)
-    
-    log.info(
-        f"Text hybrid components — "
-        f"dense={len(dense_results)}, bm25={len(bm25_results)}"
-    )
+    log.info(f"Text hybrid — dense={len(dense_results)}, bm25={len(bm25_results)}")
 
     if fusion == "rrf":
         return _rrf_fuse(
             [(dense_results, "dense"), (bm25_results, "bm25")],
-            rrf_k=rrf_k,
-            top_k=k,
+            rrf_k=rrf_k, top_k=k,
         )
     return _score_fuse(
         [(dense_results, "dense", dense_weight), (bm25_results, "bm25", bm25_weight)],
@@ -393,36 +416,22 @@ def text_hybrid_query(
 
 def image_hybrid_query(
     query: str,
-    k: int = 5,
+    k: int = 10,
     where: Optional[dict] = None,
     fusion: Literal["rrf", "score"] = "rrf",
     rrf_k: int = 60,
     clip_weight: float = 0.5,
     caption_weight: float = 0.5,
 ) -> list[dict]:
-    """
-    Hybrid image retrieval: fuse CLIP + caption-mediated paths.
-
-    Why two paths?
-    - CLIP excels at short visual queries aligned with its training distribution
-    - Caption path excels at long/abstract descriptions and exact nouns
-    - Fusing both provides better recall across query types
-
-    Returns image results only (source_type="photo" entries from both paths).
-    """
+    """Hybrid image retrieval: fuse CLIP + caption-mediated paths."""
     clip_results    = query_image_clip(query,    k=k, where=where)
     caption_results = query_image_caption(query, k=k, where=where)
-    
-    log.info(
-        f"Image hybrid components — "
-        f"clip={len(clip_results)}, caption={len(caption_results)}"
-    )
+    log.info(f"Image hybrid — clip={len(clip_results)}, caption={len(caption_results)}")
 
     if fusion == "rrf":
         return _rrf_fuse(
             [(clip_results, "clip"), (caption_results, "caption")],
-            rrf_k=rrf_k,
-            top_k=k,
+            rrf_k=rrf_k, top_k=k,
         )
     return _score_fuse(
         [(clip_results, "clip", clip_weight), (caption_results, "caption", caption_weight)],
@@ -432,31 +441,19 @@ def image_hybrid_query(
 
 def hybrid_query(
     query: str,
-    k: int = 5,
+    k: int = 10,
     text_where: Optional[dict] = None,
     image_where: Optional[dict] = None,
     fusion: Literal["rrf", "score"] = "rrf",
     rrf_k: int = 60,
 ) -> list[dict]:
-    """
-    Full multimodal hybrid retrieval: fuse all four paths.
-
-        dense  +  BM25  +  CLIP  +  caption
-
-    Use this for queries where you don't know whether the answer is in
-    text or images (the agent's default for ambiguous queries).
-
-    Results carry a 'source' field showing which paths contributed:
-        "bm25", "caption", "clip", "dense", or combinations joined with "+"
-    """
+    """Full multimodal hybrid retrieval: fuse all four paths."""
     dense_results   = query_text_dense(query,    k=k, where=text_where)
     bm25_results    = query_text_bm25(query,     k=k, where=text_where)
     clip_results    = query_image_clip(query,    k=k, where=image_where)
     caption_results = query_image_caption(query, k=k, where=image_where)
-    
     log.info(
-        f"Full hybrid components — "
-        f"dense={len(dense_results)}, bm25={len(bm25_results)}, "
+        f"Full hybrid — dense={len(dense_results)}, bm25={len(bm25_results)}, "
         f"clip={len(clip_results)}, caption={len(caption_results)}"
     )
 
@@ -468,8 +465,7 @@ def hybrid_query(
                 (clip_results,    "clip"),
                 (caption_results, "caption"),
             ],
-            rrf_k=rrf_k,
-            top_k=k,
+            rrf_k=rrf_k, top_k=k,
         )
     return _score_fuse(
         [
@@ -482,27 +478,122 @@ def hybrid_query(
     )
 
 
-# Public dispatcher — single entry point for LangGraph agent tools
+# ─────────────────────────────────────────────────────────────────────────────
+# Broad retrieval — wide fetch + post-filter by geographic terms
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _doc_matches_geo(doc: dict, terms: set[str]) -> bool:
+    """
+    Return True if the document's metadata or text contains any of the
+    geographic terms (case-insensitive substring match).
+
+    Checks: destination, city, country, suburb fields + document text.
+    """
+    meta = doc.get("metadata", {})
+    haystack_parts = [
+        str(meta.get("destination", "")),
+        str(meta.get("city", "")),
+        str(meta.get("country", "")),
+        str(meta.get("suburb", "")),
+        doc.get("document", ""),
+    ]
+    haystack = " ".join(haystack_parts).lower()
+    return any(t.lower() in haystack for t in terms)
+
+
+def broad_retrieve(
+    query: str,
+    geo_terms: set[str],
+    k: int = 30,
+    mode: str = "full",
+) -> list[dict]:
+    """
+    Run retrieval with NO metadata filter at high k, then post-filter
+    results to those mentioning any of the geographic terms.
+
+    This catches documents where the destination field is a city but the
+    query used the country name, or vice versa.
+
+    geo_terms: set of strings to match (e.g. {"Japan", "Tokyo", "Osaka", ...})
+    """
+    log.info(f"[broad_retrieve] query={query!r}, geo_terms={geo_terms}, k={k}")
+    results = retrieve(query=query, mode=mode, k=k, auto_expand=False)
+    filtered = [r for r in results if _doc_matches_geo(r, geo_terms)]
+    log.info(f"[broad_retrieve] {len(results)} raw → {len(filtered)} after geo filter")
+    return filtered
+
+
+def build_geo_terms(filter_value: str) -> set[str]:
+    """
+    Given a city or country string, return the full set of geographic terms
+    to use for broad post-filtering.
+
+    E.g. "Japan" → {"Japan", "tokyo", "osaka", "kyoto", ...}
+         "Tokyo" → {"Tokyo", "Japan", "tokyo", ...}
+    """
+    terms: set[str] = {filter_value, filter_value.lower()}
+
+    # If it's a country alias, resolve and add all cities
+    country = resolve_country(filter_value)
+    if country:
+        terms.add(country)
+        terms.update(cities_for_country(country))
+        return terms
+
+    # If it's a city, also add the country
+    inferred = infer_country_from_city(filter_value)
+    if inferred:
+        terms.add(inferred)
+        terms.update(cities_for_country(inferred))
+
+    return terms
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Public dispatcher
+# ─────────────────────────────────────────────────────────────────────────────
 
 RetrievalMode = Literal[
-    "text",          # dense + BM25 hybrid (default for text queries)
-    "image",         # CLIP + caption hybrid (for visual queries)
-    "full",          # all four paths fused (for ambiguous / multi-modal queries)
-    "dense_only",    # ablation: dense text only, no BM25
-    "bm25_only",     # ablation: BM25 only
-    "clip_only",     # ablation: CLIP only, no caption
-    "caption_only",  # ablation: caption-mediated only
+    "text",
+    "image",
+    "full",
+    "dense_only",
+    "bm25_only",
+    "clip_only",
+    "caption_only",
 ]
 
+# Minimum number of results before we trigger the broad fallback
+_SPARSE_RESULT_THRESHOLD = 5
+
+def _extract_destination_value(filt: dict) -> Optional[str]:
+    if "destination" not in filt:
+        return None
+
+    val = filt["destination"]
+
+    # Case 1: plain string
+    if isinstance(val, str):
+        return val
+
+    # Case 2: {"$eq": "Tokyo"}
+    if isinstance(val, dict):
+        if "$eq" in val:
+            return val["$eq"]
+        if "$in" in val and isinstance(val["$in"], list) and val["$in"]:
+            return val["$in"][0]  # take first for expansion
+
+    return None
 
 def retrieve(
     query: str,
     mode: RetrievalMode = "full",
-    k: int = 5,
+    k: int = 25,
     text_where: Optional[dict] = None,
     image_where: Optional[dict] = None,
     fusion: Literal["rrf", "score"] = "rrf",
     rrf_k: int = 60,
+    auto_expand: bool = True,
 ) -> list[dict]:
     """
     Single entry point for all retrieval paths.  LangGraph agent tools
@@ -512,120 +603,109 @@ def retrieve(
     ----------
     query       : natural-language query string
     mode        : retrieval strategy (see RetrievalMode)
-    k           : number of results to return
+    k           : number of results to return (default raised to 25 for broader recall)
     text_where  : ChromaDB metadata pre-filter for text paths
-                  e.g. {"destination": "Japan"} or {"source_type": "map"}
     image_where : ChromaDB metadata pre-filter for image/caption paths
-    fusion      : "rrf" (default, no tuning needed) or "score" (ablation)
-    rrf_k       : RRF constant; higher = less rank-sensitive (default 60)
+    fusion      : "rrf" (default) or "score" (ablation)
+    rrf_k       : RRF constant (default 60)
+    auto_expand : if True and filtered results < _SPARSE_RESULT_THRESHOLD,
+                  automatically fall back to broad_retrieve() using geo terms
+                  inferred from the filter value
 
     Returns
     -------
-    Ranked list of result dicts.  Each dict contains:
-        id, document, metadata, distance, score, source,
-        rrf_score (if fusion="rrf") or fused_score (if fusion="score")
-
-    Examples
-    --------
-    # Factual text query with destination filter
-    retrieve("What did I spend at restaurants in Tokyo?",
-                mode="text", text_where={"destination": "Tokyo"})
-
-    # Cross-modal: find photos of a specific visual scene
-    retrieve("street market with colourful stalls",
-                mode="image")
-
-    # Multi-hop / ambiguous: search everything
-    retrieve("What can I cook with what I have from my Kyoto trip?",
-                mode="full")
-
-    # Ablation: dense-only baseline (no BM25)
-    retrieve("Fushimi Inari hike", mode="dense_only")
+    Ranked list of result dicts with id, document, metadata, distance, score,
+    source, rrf_score/fused_score.
     """
     log.info(
-        f"Retrieve called — query={query!r}, mode={mode}, k={k}, "
+        f"retrieve() — query={query!r}, mode={mode}, k={k}, "
         f"fusion={fusion}, text_where={text_where}, image_where={image_where}"
     )
-    
+
     if mode == "text":
-        return text_hybrid_query(
-            query, k=k, where=text_where, fusion=fusion, rrf_k=rrf_k
-        )
+        results = text_hybrid_query(query, k=k, where=text_where, fusion=fusion, rrf_k=rrf_k)
 
     elif mode == "image":
-        return image_hybrid_query(
-            query, k=k, where=image_where, fusion=fusion, rrf_k=rrf_k
-        )
+        results = image_hybrid_query(query, k=k, where=image_where, fusion=fusion, rrf_k=rrf_k)
 
     elif mode == "full":
-        return hybrid_query(
+        results = hybrid_query(
             query, k=k,
             text_where=text_where, image_where=image_where,
             fusion=fusion, rrf_k=rrf_k,
         )
 
-    # --- Ablation modes (single-path, for evaluation) ---
-
     elif mode == "dense_only":
-        return query_text_dense(query, k=k, where=text_where)
+        results = query_text_dense(query, k=k, where=text_where)
 
     elif mode == "bm25_only":
-        return query_text_bm25(query, k=k, where=text_where)
+        results = query_text_bm25(query, k=k, where=text_where)
 
     elif mode == "clip_only":
-        return query_image_clip(query, k=k, where=image_where)
+        results = query_image_clip(query, k=k, where=image_where)
 
     elif mode == "caption_only":
-        return query_image_caption(query, k=k, where=image_where)
+        results = query_image_caption(query, k=k, where=image_where)
 
     else:
-        raise ValueError(
-            f"Unknown retrieval mode '{mode}'. "
-            f"Valid modes: {list(RetrievalMode.__args__)}"
-        )
+        raise ValueError(f"Unknown retrieval mode '{mode}'.")
 
+    # ── Auto-expand: broad fallback when filtered results are sparse ──────────
+    if auto_expand and (text_where or image_where):
+        if len(results) < _SPARSE_RESULT_THRESHOLD:
+            # Extract the filter value to build geo terms
+            filter_val = None
+            for filt in (text_where, image_where):
+                if filt:
+                    # Handle simple {"destination": "X"} and {"$and": [...]} forms
+                    # direct case
+                    filter_val = _extract_destination_value(filt)
+                    if filter_val:
+                        break
+
+                    # $and case
+                    if "$and" in filt:
+                        for sub in filt["$and"]:
+                            if isinstance(sub, dict):
+                                filter_val = _extract_destination_value(sub)
+                                if filter_val:
+                                    break
+                if filter_val:
+                    break
+
+            if filter_val:
+                geo_terms = build_geo_terms(filter_val)
+                log.info(
+                    f"[retrieve] sparse results ({len(results)}) — "
+                    f"auto-expanding with geo_terms={geo_terms}"
+                )
+                broad = broad_retrieve(query, geo_terms=geo_terms, k=k * 2, mode=mode if mode != "image" else "full")
+                # Merge: broad results that aren't already in results
+                existing_ids = {r["id"] for r in results}
+                extras = [r for r in broad if r["id"] not in existing_ids]
+                results = results + extras
+                log.info(f"[retrieve] after auto-expand: {len(results)} total results")
+
+    return results
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Smoke test
+# ─────────────────────────────────────────────────────────────────────────────
+
 if __name__ == "__main__":
     import argparse
     from pprint import pprint
 
     parser = argparse.ArgumentParser(description="Retriever smoke test CLI")
-    parser.add_argument(
-        "--smoke-test",
-        action="store_true",
-        help="Run a simple retrieval smoke test",
-    )
-    parser.add_argument(
-        "--query",
-        type=str,
-        default="restaurants in Tokyo",
-        help="Query string for smoke test",
-    )
-    parser.add_argument(
-        "--mode",
-        type=str,
-        default="text",
-        choices=[
-            "text",
-            "image",
-            "full",
-            "dense_only",
-            "bm25_only",
-            "clip_only",
-            "caption_only",
-        ],
-        help="Retrieval mode for smoke test",
-    )
-    parser.add_argument(
-        "-k",
-        type=int,
-        default=5,
-        help="Number of results to return",
-    )
-
+    parser.add_argument("--smoke-test", action="store_true")
+    parser.add_argument("--query", type=str, default="restaurants in Tokyo")
+    parser.add_argument("--mode", type=str, default="text",
+                        choices=["text","image","full","dense_only","bm25_only","clip_only","caption_only"])
+    parser.add_argument("-k", type=int, default=10)
     args = parser.parse_args()
 
     if args.smoke_test:
-        print(f"Running smoke test with query={args.query!r}, mode={args.mode!r}, k={args.k}")
+        print(f"Smoke test: query={args.query!r}, mode={args.mode!r}, k={args.k}")
         results = retrieve(args.query, mode=args.mode, k=args.k)
         pprint(results)

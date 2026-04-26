@@ -56,7 +56,7 @@ class AgentState(TypedDict):
     # Router outputs
     intent:        str            # "lookup" | "generative"
     query_type:    str            # "factual" | "cross_modal" | "multi_hop" | "conversational"
-    image_paths: list[str]        # list of image paths
+    image_paths: list[str]
     memory_lookup: bool
     memory_write:  bool
 
@@ -65,6 +65,11 @@ class AgentState(TypedDict):
     retrieval_mode: str
     text_filter:    Optional[dict]
     image_filter:   Optional[dict]
+
+    # Geo scope — set by planner when query implies a country
+    # tool_executor uses this to run a broad fallback pass
+    geo_scope:  Optional[str]     # e.g. "Japan", "Denmark", None
+    geo_terms:  list[str]         # all city/country strings for post-filtering
 
     # Retrieved evidence
     retrieved_docs:   list[dict]
@@ -90,11 +95,8 @@ class AgentState(TypedDict):
 # ---------------------------------------------------------------------------
 # Routing edges
 # ---------------------------------------------------------------------------
-def _route_after_router(state: AgentState) -> str:
-    return "memory_manager"   # always load memory; node itself guards writes
 
 def _route_after_analyser(state: AgentState) -> str:
-    """Route to creative_responder for generative intent, direct_responder otherwise."""
     return "creative_responder" if state.get("intent") == "generative" else "direct_responder"
 
 
@@ -105,24 +107,24 @@ def _route_after_analyser(state: AgentState) -> str:
 def build_graph() -> StateGraph:
     graph = StateGraph(AgentState)
 
-    graph.add_node("query_router",        query_router)
-    graph.add_node("memory_manager",      memory_manager)
-    graph.add_node("retrieval_planner",   retrieval_planner)
-    graph.add_node("tool_executor",       tool_executor)
+    graph.add_node("query_router",         query_router)
+    graph.add_node("memory_manager",       memory_manager)
+    graph.add_node("retrieval_planner",    retrieval_planner)
+    graph.add_node("tool_executor",        tool_executor)
     graph.add_node("transaction_enricher", transaction_enricher)
-    graph.add_node("temporal_correlator", temporal_correlator)
-    graph.add_node("analyser",            analyser)
-    graph.add_node("direct_responder",    direct_responder)
-    graph.add_node("creative_responder",  creative_responder)
+    graph.add_node("temporal_correlator",  temporal_correlator)
+    graph.add_node("analyser",             analyser)
+    graph.add_node("direct_responder",     direct_responder)
+    graph.add_node("creative_responder",   creative_responder)
 
     graph.set_entry_point("query_router")
 
-    graph.add_edge("query_router", "memory_manager")
-    graph.add_edge("memory_manager", "retrieval_planner")
-    graph.add_edge("retrieval_planner",   "tool_executor")
+    graph.add_edge("query_router",         "memory_manager")
+    graph.add_edge("memory_manager",       "retrieval_planner")
+    graph.add_edge("retrieval_planner",    "tool_executor")
     graph.add_edge("tool_executor",        "transaction_enricher")
     graph.add_edge("transaction_enricher", "temporal_correlator")
-    graph.add_edge("temporal_correlator", "analyser")
+    graph.add_edge("temporal_correlator",  "analyser")
 
     graph.add_conditional_edges(
         "analyser",
@@ -161,11 +163,12 @@ def run_query(query: str, session_memory: dict | None = None, image_paths: list[
         trip_windows     : temporal windows built from retrieved docs
         grounded         : verification result
         tool_calls       : full execution trace
+        geo_scope        : country inferred by planner (if any)
     """
-    # Sync the module-level memory store with whatever the session carries
     if session_memory:
         from agent.tools import update_memory_store
         update_memory_store(session_memory)
+
     initial: AgentState = {
         "query":             query,
         "image_paths":       image_paths or [],
@@ -178,6 +181,8 @@ def run_query(query: str, session_memory: dict | None = None, image_paths: list[
         "retrieval_mode":    "full",
         "text_filter":       None,
         "image_filter":      None,
+        "geo_scope":         None,
+        "geo_terms":         [],
         "retrieved_docs":    [],
         "retrieved_images":  [],
         "temporal_context":  "",
@@ -211,4 +216,4 @@ if __name__ == "__main__":
         print(f"\nAgent: {result['answer']}")
         if not result["grounded"] and result["ungrounded_claims"]:
             print(f"  ⚠  Ungrounded: {result['ungrounded_claims']}")
-        print(f"  [intent={result.get('intent')}]  [trace] {' → '.join(result['tool_calls'])}\n")
+        print(f"  [intent={result.get('intent')}]  [geo={result.get('geo_scope')}]  [trace] {' → '.join(result['tool_calls'])}\n")

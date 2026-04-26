@@ -8,7 +8,7 @@ Node pipeline:
                                             |
                                     temporal_correlator
                                             |
-                                       analyser          <- extracts facts/patterns from evidence
+                                       analyser
                                             |
                                ┌────────────┴────────────┐
                                ▼                         ▼
@@ -18,27 +18,31 @@ Node pipeline:
                                             ▼
                                            END
 
-Intent types
-------------
-  lookup     : answer lives directly in the data (factual, cross-modal)
-               e.g. "how much did I spend in Tokyo", "when did I visit Berlin",
-               "show me photos from my Japan trip", "what restaurants did I go to"
-               -> analyser extracts the fact -> direct_responder returns it
+Retrieval improvements (v2)
+---------------------------
+1. Country-level expansion in retrieval_planner:
+   - The planner now always outputs a `geo_scope` field with the inferred
+     country (e.g. "Japan" for a query about "Tokyo").
+   - text_filter and image_filter are set at COUNTRY level when the query
+     is country-scoped, city level only when hyper-local precision is needed.
+   - This fixes Q1-style failures where documents are tagged with cities
+     (e.g. destination="Tokyo") but the query uses the country name ("Japan").
 
-  generative : answer requires reasoning BEYOND the data to produce something new
-               e.g. "recommend somewhere new", "suggest a trip", "what should I do next"
-               -> analyser extracts patterns/constraints -> creative_responder generates
-                  something the user has NOT done/seen before
+2. Broad retrieval fallback in tool_executor:
+   - After the main retrieval pass, if total unique docs < SPARSE_THRESHOLD,
+     tool_executor runs a second "broad" pass: no metadata filter, high k,
+     then post-filters in Python using the geo_terms set built from the query.
+   - This catches city-tagged documents that city-only filters miss.
 
-The router classifies intent; the analyser does the heavy reasoning;
-the responders are thin formatters focused on their specific output style.
+3. Query expansion for conversational queries (Q4):
+   - When query_type == "conversational", tool_executor calls the LLM once
+     to expand the query into 3-5 semantically related sub-queries, then
+     runs each through retrieval and merges results.
+   - This dramatically broadens recall for preference-sensitive questions.
 
-Image handling
---------------
-  When image_paths are present in state, nodes that need visual context (_query_router,
-  analyser) use _vlm (a vision-language model) instead of _llm.
-  _encode_images() converts local file paths to base64 image_url content blocks
-  compatible with the Groq vision API.
+4. Default k raised from 15 → 25 per sub-query.
+
+5. Caption fallback retained and triggered earlier (photo_count < 2).
 """
 
 from __future__ import annotations
@@ -66,7 +70,12 @@ from .tools import (
     search_text_tool,
     update_memory_store,
 )
-from src.retrieval.retriever import retrieve
+from src.retrieval.retriever import (
+    retrieve,
+    build_geo_terms,
+    resolve_country,
+    broad_retrieve,
+)
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -81,7 +90,6 @@ log = logging.getLogger(__name__)
 
 
 def _ts(label: str) -> None:
-    """Emit a timestamped step marker."""
     log.info(f"{label}")
 
 
@@ -92,6 +100,12 @@ def _ts(label: str) -> None:
 ENABLE_VERIFY: bool = os.getenv("AGENT_VERIFY", "0") == "1"
 ENABLE_TEMPORAL_CORRELATION: bool = os.getenv("AGENT_TEMPORAL", "1") == "1"
 TRIP_WINDOW_GAP_DAYS: int = 3
+
+# Minimum unique docs before triggering broad fallback in tool_executor
+SPARSE_THRESHOLD: int = int(os.getenv("AGENT_SPARSE_THRESHOLD", "8"))
+
+# Default k per sub-query (raised from 15 for broader recall)
+DEFAULT_K: int = int(os.getenv("AGENT_K", "25"))
 
 # ---------------------------------------------------------------------------
 # LLM / VLM instances
@@ -111,22 +125,14 @@ _SUPPORTED_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
 
 
 def _encode_images(image_paths: list[str]) -> list[dict]:
-    """
-    Encode local image files as base64 image_url content blocks for the Groq
-    vision API.  Unsupported extensions and missing files are skipped with a
-    warning so a bad path never crashes the pipeline.
-
-    Returns a list of dicts:
-        [{"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,..."}}]
-    """
     blocks = []
     for path in image_paths:
         p = Path(path)
         if not p.exists():
-            log.warning(f"[nodes] Image not found, skipping: {path}")
+            log.warning(f"[nodes] Image not found: {path}")
             continue
         if p.suffix.lower() not in _SUPPORTED_IMAGE_EXTS:
-            log.warning(f"[nodes] Unsupported image extension, skipping: {path}")
+            log.warning(f"[nodes] Unsupported image extension: {path}")
             continue
         ext  = p.suffix.lower().lstrip(".")
         mime = "jpeg" if ext == "jpg" else ext
@@ -140,10 +146,6 @@ def _encode_images(image_paths: list[str]) -> list[dict]:
 
 
 def _build_user_content(text: str, image_blocks: list[dict]) -> list[dict] | str:
-    """
-    Return a multimodal content list when image_blocks are present,
-    or a plain string when there are none (keeps non-vision calls clean).
-    """
     if not image_blocks:
         return text
     return [{"type": "text", "text": text}] + image_blocks
@@ -301,7 +303,6 @@ def _windows_to_context(windows: list[dict], undated: list[dict]) -> str:
             f"=== Trip window {i}: {w['start']} → {w['end']} "
             f"({w['days']} day{'s' if w['days'] != 1 else ''}) ==="
         )
-
         dated_records = []
         for doc in w["transactions"]:
             dt = _extract_date(doc)
@@ -326,7 +327,6 @@ def _windows_to_context(windows: list[dict], undated: list[dict]) -> str:
             lines.append("  Saved places (map):")
             for doc in w["map"][:8]:
                 lines.append(f"    MAP: {doc.get('document', '')[:150]}")
-
         lines.append("")
 
     if undated:
@@ -360,10 +360,10 @@ Also classify query_type (for retrieval planning):
   "multi_hop"      - combines multiple evidence sources
   "conversational" - references preferences or earlier turns
 
-If one or more images are attached to this message, treat them as additional query
-context. A query with images is almost always "cross_modal" or "factual".
+If one or more images are attached, treat them as additional query context.
+A query with images is almost always "cross_modal" or "factual".
 
-And memory flags:
+Memory flags:
   memory_lookup = true  when stored preferences help answer
   memory_write  = true  ONLY when query explicitly states a NEW personal preference
 
@@ -383,11 +383,10 @@ def query_router(state: dict) -> dict:
     image_paths   = state.get("image_paths", [])
     image_blocks  = _encode_images(image_paths)
     model         = _vlm if image_blocks else _llm
-
     user_content  = _build_user_content(state["query"], image_blocks)
 
     if image_blocks:
-        log.info(f"[router] {len(image_blocks)} image(s) attached — using VLM ({_GROQ_VLM_MODEL})")
+        log.info(f"[router] {len(image_blocks)} image(s) attached — using VLM")
 
     response   = model.invoke([
         SystemMessage(content=_ROUTER_SYSTEM),
@@ -434,7 +433,6 @@ def query_router(state: dict) -> dict:
 # ---------------------------------------------------------------------------
 
 def memory_manager(state: dict) -> dict:
-    """Load persistent preferences; extract new ones only when a preference signal is present."""
     _ts("memory_manager: start")
     if state.get("memory_write"):
         if any(kw in state["query"].lower() for kw in _PREFERENCE_SIGNALS):
@@ -466,69 +464,110 @@ Source types:
 
 Retrieval modes:
     "text"  - transactions + map entries only
-    "image" - photo captions only  
+    "image" - photo captions only
     "full"  - all three (use this by DEFAULT for almost all queries)
 
-CRITICAL RULE — parallel source coverage:
-For every query, generate at least ONE sub-query targeting EACH source type:
-    - A transaction sub-query  (what was bought/paid)
-    - A map sub-query          (what places were saved/visited)
-    - A photo sub-query        (what scenes/activities were photographed)
+CRITICAL RULE — COUNTRY-LEVEL SCOPE:
+Data may be tagged at the CITY level (e.g. destination="Tokyo"), NOT country level.
+If the query mentions or implies a country (Japan, Italy, Denmark, etc.), you MUST:
 
-This is essential because the system links all three by DATE into trip windows.
-Photos reveal WHAT the user was doing when a transaction occurred.
-Map saves reveal WHERE they were. Transactions reveal HOW MUCH they spent.
-Together they reconstruct the full activity, not just the cost.
+1. Set `geo_scope` to the COUNTRY name (e.g. "Japan").
+2. Set `text_filter` and `image_filter` to {} (EMPTY — no filter).
+   This is because filtering by country name would miss city-tagged docs.
+   The tool_executor will do a broad post-filter using all known cities for that country.
+3. Include sub-queries using CITY NAMES of that country, not just the country name.
+   E.g. for Japan: use "Tokyo", "Osaka", "Kyoto", "Hiroshima" in sub-queries.
 
-Photo sub-queries should describe VISUAL SCENES, not just locations:
-    Good: "street food market stalls eating", "mountain hiking trail scenery"
-    Bad:  "travel photo locations visited"
+If the query mentions a SPECIFIC CITY and you want precise results, you MAY set:
+    text_filter: {"destination": "<city>"}
+But only do this when the query is very specifically about that one city AND
+you are confident the data uses that exact city name.
+
+For ANY query where you are unsure of the exact destination tag in the data,
+use empty filters and rely on broad sub-queries.
+
+CRITICAL RULE — PARALLEL SOURCE COVERAGE:
+For every query, generate sub-queries covering ALL THREE source types:
+    - Transaction sub-queries (what was bought/paid)
+    - Map sub-queries (what places were saved/visited)
+    - Photo sub-queries (what scenes/activities were photographed)
+
+Photo sub-queries must describe VISUAL SCENES:
+    Good: "street food market stalls eating local cuisine"
+    Bad:  "travel photo locations"
 
 Sub-query rules:
     - Plain natural language strings only, NOT SQL
-    - 4-6 sub-queries covering all three source types
-    - At least 1 transaction, 1 map, and 2 photo scene sub-queries
-    - Filters: destination (str), year (int), source_type (str)
+    - 6-10 sub-queries covering all three source types
+    - Use specific city names where relevant (e.g. "Tokyo train station", "Osaka food")
+    - At least 2 transaction, 2 map, and 3 photo scene sub-queries
 
-Examples:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXAMPLES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Query: how much did I spend on transport in Japan [intent=lookup]
+→ geo_scope="Japan", filters EMPTY (city-tagged docs need broad search)
+{"geo_scope": "Japan",
+ "sub_queries": [
+    "Tokyo train subway metro ticket transport",
+    "Osaka bus rail transport ticket fare",
+    "Kyoto transport taxi bus train",
+    "Japan IC card Suica Pasmo railway",
+    "shinkansen bullet train ticket Japan",
+    "Tokyo station platform transport map saved",
+    "Osaka metro station saved places map",
+    "train station platform Japan travel photo",
+    "subway metro underground Japan photo",
+    "bus transport street Japan travel photo"
+ ],
+ "retrieval_mode": "full", "text_filter": {}, "image_filter": {}}
+
+Query: when did I visit Copenhagen [intent=lookup]
+→ geo_scope="Denmark", filters EMPTY
+{"geo_scope": "Denmark",
+ "sub_queries": [
+    "Copenhagen transaction payment spending",
+    "Copenhagen Kobenhavn Koebenhavn date visit",
+    "Denmark travel spending food transport",
+    "Copenhagen saved places restaurants attractions map",
+    "Copenhagen street canals colourful buildings photo",
+    "Denmark Scandinavia travel photo",
+    "Nyhavn harbour Copenhagen photo",
+    "Danish food smørrebrød pastry photo"
+ ],
+ "retrieval_mode": "full", "text_filter": {}, "image_filter": {}}
 
 Query: what do I spend money on while travelling [intent=lookup]
-{"sub_queries": [
+→ no specific location, no geo_scope, no filters
+{"geo_scope": null,
+ "sub_queries": [
     "restaurant food drink payment receipt",
     "transport taxi train bus ticket fare",
     "accommodation hotel hostel payment",
     "shopping market souvenir purchase",
     "street food market eating local cuisine photo",
-    "transport station platform commuting photo",
+    "transport station commuting travel photo",
     "hotel accommodation room stay photo",
     "tourist attraction museum sightseeing photo",
     "saved restaurants cafes food places map",
     "saved transport routes stations map"
-    ],
-    "retrieval_mode": "full", "text_filter": {}, "image_filter": {}}
-
-Query: what was my Hong Kong trip like [intent=lookup]
-{"sub_queries": [
-    "Hong Kong transactions spending food transport",
-    "Hong Kong saved places restaurants attractions map",
-    "Hong Kong street scenes harbour skyline photo",
-    "Hong Kong food markets local cuisine photo",
-    "Hong Kong transport MTR ferry commute photo"
-    ],
-    "retrieval_mode": "full",
-    "text_filter": {"destination": "Hong Kong"},
-    "image_filter": {"destination": "Hong Kong"}}
+ ],
+ "retrieval_mode": "full", "text_filter": {}, "image_filter": {}}
 
 Query: recommend somewhere new to travel [intent=generative]
-{"sub_queries": [
+{"geo_scope": null,
+ "sub_queries": [
     "all destination transactions total costs",
     "accommodation food transport spending amounts",
     "saved map places countries points of interest",
     "outdoor nature landscape scenery travel photo",
     "urban city streets architecture cultural photo",
-    "food dining restaurant local cuisine photo"
-    ],  
-    "retrieval_mode": "full", "text_filter": {}, "image_filter": {}}
+    "food dining restaurant local cuisine photo",
+    "beach ocean coastal scenery photo",
+    "mountain hiking outdoor adventure photo"
+ ],
+ "retrieval_mode": "full", "text_filter": {}, "image_filter": {}}
 
 Respond ONLY with valid JSON:"""
 
@@ -538,11 +577,10 @@ def retrieval_planner(state: dict) -> dict:
     _ts("retrieval_planner: start")
     memory_str = json.dumps(state.get("memory", {})) if state.get("memory") else "{}"
 
-    # If images were provided, note that to the planner so it biases toward "full"
     image_note = ""
     if state.get("image_paths"):
         n = len(state["image_paths"])
-        image_note = f"\nNote: the user also provided {n} image file(s) directly. Bias retrieval_mode toward 'full' and include photo scene sub-queries.\n"
+        image_note = f"\nNote: the user provided {n} image file(s). Bias retrieval_mode toward 'full' and include photo scene sub-queries.\n"
 
     response = _llm.invoke([
         SystemMessage(content=_PLANNER_SYSTEM),
@@ -569,6 +607,17 @@ def retrieval_planner(state: dict) -> dict:
     if not sub_queries:
         sub_queries = [state["query"]]
 
+    # ── geo_scope handling ────────────────────────────────────────────────────
+    geo_scope = parsed.get("geo_scope")  # e.g. "Japan", "Denmark", None
+
+    # Resolve geo_scope to a canonical country and build geo_terms
+    geo_terms: set[str] = set()
+    if geo_scope:
+        country = resolve_country(geo_scope) or geo_scope
+        geo_terms = build_geo_terms(country)
+        log.info(f"[planner] geo_scope={geo_scope!r} → geo_terms={geo_terms}")
+
+    # ── Filters: use EMPTY for country-scoped queries ─────────────────────────
     text_filter  = parsed.get("text_filter")  or None
     image_filter = parsed.get("image_filter") or None
     if text_filter  == {}: text_filter  = None
@@ -578,8 +627,14 @@ def retrieval_planner(state: dict) -> dict:
     if image_filter:
         image_filter = {k: v for k, v in image_filter.items() if k in _VALID_FILTER_KEYS} or None
 
+    # If geo_scope was set but filters were not explicitly cleared, clear them
+    # so we rely on broad post-filtering rather than restrictive ChromaDB pre-filters
+    if geo_scope and (text_filter or image_filter):
+        log.info("[planner] geo_scope set — overriding filters to empty for broad retrieval")
+        text_filter  = None
+        image_filter = None
+
     if state.get("intent") == "generative" and len(sub_queries) < 3:
-        log.info("[planner] generative query with too few sub-queries — expanding")
         base = sub_queries[0] if sub_queries else state["query"]
         sub_queries = list(dict.fromkeys([
             base,
@@ -587,9 +642,11 @@ def retrieval_planner(state: dict) -> dict:
             "destinations previously visited transactions",
             "saved map places points of interest",
             "travel photo locations scenes visited",
+            "outdoor scenery nature travel photo",
+            "city architecture urban culture photo",
         ]))
 
-    log.info(f"[planner] mode={mode}  n_sub={len(sub_queries)}  text_filter={text_filter}")
+    log.info(f"[planner] mode={mode}  n_sub={len(sub_queries)}  text_filter={text_filter}  geo_scope={geo_scope}")
     log.info(f"[planner] sub_queries={sub_queries}")
     _ts("retrieval_planner: done")
     return {
@@ -597,7 +654,9 @@ def retrieval_planner(state: dict) -> dict:
         "retrieval_mode": mode,
         "text_filter":    text_filter,
         "image_filter":   image_filter,
-        "tool_calls":     state.get("tool_calls", []) + [f"planner(mode={mode}, n_sub={len(sub_queries)})"],
+        "geo_scope":      geo_scope,
+        "geo_terms":      list(geo_terms),  # serialisable for state
+        "tool_calls":     state.get("tool_calls", []) + [f"planner(mode={mode}, n_sub={len(sub_queries)}, geo={geo_scope})"],
     }
 
 
@@ -608,26 +667,97 @@ def retrieval_planner(state: dict) -> dict:
 _ABLATION_MODES = {"dense_only", "bm25_only", "clip_only", "caption_only"}
 _MODE_TO_TOOL   = {"text": search_text_tool, "image": search_images_tool, "full": hybrid_search_tool}
 
+# Query expansion prompt for conversational queries (Q4-style)
+_EXPAND_SYSTEM = """You are expanding a conversational travel query into multiple search queries.
+
+The user's query references personal preferences, dietary restrictions, past experiences,
+or multi-turn context. Generate 4-6 diverse search queries that together will retrieve
+all relevant information needed to answer it.
+
+Rules:
+- Queries must be plain natural language strings
+- Cover different aspects: places, transactions, photos, preferences
+- Vary terminology and specificity
+- Do NOT include meta-instructions, just query strings
+
+Return ONLY a JSON array of strings, e.g.:
+["query 1", "query 2", "query 3"]"""
+
+
+def _expand_query_for_conversational(query: str, memory: dict) -> list[str]:
+    """
+    Use the LLM to expand a conversational/preference query into multiple
+    semantically diverse sub-queries for broader retrieval.
+    """
+    try:
+        memory_str = json.dumps(memory) if memory else "{}"
+        response = _llm.invoke([
+            SystemMessage(content=_EXPAND_SYSTEM),
+            HumanMessage(content=(
+                f"User preferences from memory: {memory_str}\n\n"
+                f"Query to expand: {query}"
+            )),
+        ])
+        raw = response.content.strip()
+        # Try to extract JSON array
+        match = re.search(r"\[.*?\]", raw, re.DOTALL)
+        if match:
+            candidates = json.loads(match.group())
+            return [c for c in candidates if isinstance(c, str) and len(c) > 5]
+    except Exception as e:
+        log.warning(f"[tool_executor] query expansion failed: {e}")
+    return []
+
 
 def tool_executor(state: dict) -> dict:
-    """Run retrieve() for each sub-query and de-duplicate results by doc ID."""
+    """
+    Run retrieve() for each sub-query and de-duplicate results by doc ID.
+
+    Improvements over v1:
+    - k raised to DEFAULT_K (25) per sub-query
+    - Conversational queries trigger LLM query expansion before retrieval
+    - Country-scoped queries trigger a broad geo-filtered fallback pass
+      when results are sparse (< SPARSE_THRESHOLD unique docs)
+    - Caption fallback triggered earlier (photo_count < 2)
+    """
     _ts("tool_executor: start")
     mode         = state.get("retrieval_mode", "full")
     raw_queries  = state.get("sub_queries", [state["query"]])
     text_filter  = state.get("text_filter")
     image_filter = state.get("image_filter")
+    geo_scope    = state.get("geo_scope")
+    geo_terms    = set(state.get("geo_terms", []))
+    query_type   = state.get("query_type", "factual")
     tool_trace   = list(state.get("tool_calls", []))
 
     sub_queries = list(dict.fromkeys(
         _sanitise_query(sq, state["query"]) for sq in raw_queries if sq
     )) or [state["query"]]
 
+    # ── Query expansion for conversational queries (Q4) ───────────────────────
+    if query_type == "conversational":
+        _ts("tool_executor: expanding conversational query")
+        expanded = _expand_query_for_conversational(state["query"], state.get("memory", {}))
+        if expanded:
+            log.info(f"[tool_executor] query expansion added {len(expanded)} sub-queries")
+            tool_trace.append(f"query_expansion({len(expanded)} queries)")
+            # Prepend expanded queries, deduplicate preserving order
+            combined = expanded + sub_queries
+            sub_queries = list(dict.fromkeys(combined))
+
+    # ── Main retrieval pass ───────────────────────────────────────────────────
     accumulated: dict[str, dict] = {}
     for sq in sub_queries:
         _ts(f"tool_executor: retrieve  q={sq[:50]!r}  mode={mode}")
         try:
-            results = retrieve(query=sq, mode=mode, k=15,
-                               text_where=text_filter, image_where=image_filter)
+            results = retrieve(
+                query=sq,
+                mode=mode,
+                k=DEFAULT_K,
+                text_where=text_filter,
+                image_where=image_filter,
+                auto_expand=True,  # retriever will auto-expand if needed
+            )
             tool_fn = _MODE_TO_TOOL.get(mode, hybrid_search_tool)
             tool_trace.append(f"{tool_fn.name}(q={sq[:40]!r})")
             log.info(f"[tool_executor] {len(results)} docs for q={sq[:40]!r}")
@@ -638,19 +768,63 @@ def tool_executor(state: dict) -> dict:
         for r in results:
             accumulated[r["id"]] = r
 
+    # ── Broad geo fallback pass ───────────────────────────────────────────────
+    # Triggered when: geo_scope is set AND we have too few docs.
+    # Runs a wide unfiltered search then post-filters by all known geo terms.
+    if geo_scope and len(accumulated) < SPARSE_THRESHOLD:
+        _ts(f"tool_executor: sparse results ({len(accumulated)}) — broad geo fallback for {geo_scope!r}")
+        if not geo_terms:
+            geo_terms = build_geo_terms(geo_scope)
+        try:
+            broad_results = broad_retrieve(
+                query=state["query"],
+                geo_terms=geo_terms,
+                k=DEFAULT_K * 3,  # wide net
+                mode=mode if mode != "image" else "full",
+            )
+            tool_trace.append(f"broad_geo_fallback(geo={geo_scope}, k={DEFAULT_K*3})")
+            log.info(f"[tool_executor] broad geo fallback returned {len(broad_results)} docs")
+            for r in broad_results:
+                accumulated[r["id"]] = r
+        except Exception as e:
+            log.warning(f"[tool_executor] broad geo fallback failed: {e}")
+
+    # Additional broad pass with individual city sub-queries for geo-scoped queries
+    if geo_scope and geo_terms and len(accumulated) < SPARSE_THRESHOLD * 2:
+        _ts("tool_executor: running city-level sub-queries for geo scope")
+        city_queries = [
+            f"{city} transport ticket fare train bus"
+            for city in sorted(geo_terms)[:6]
+            if len(city) > 3
+        ]
+        for cq in city_queries:
+            try:
+                city_results = retrieve(query=cq, mode="text", k=10, auto_expand=False)
+                tool_trace.append(f"city_sub(q={cq[:30]!r})")
+                new_count = sum(1 for r in city_results if r["id"] not in accumulated)
+                for r in city_results:
+                    accumulated[r["id"]] = r
+                if new_count > 0:
+                    log.info(f"[tool_executor] city sub-query added {new_count} new docs: {cq[:40]!r}")
+            except Exception as e:
+                log.warning(f"[tool_executor] city sub-query failed: {e}")
+
     all_docs = list(accumulated.values())
+
+    # ── Caption fallback (triggered if < 2 photos, not 0 as before) ───────────
     photo_count = sum(
         1 for d in all_docs
         if d.get("metadata", {}).get("source_type") == "photo_caption"
     )
-    if photo_count == 0 and mode != "text":
-        _ts("tool_executor: no photos retrieved — running caption fallback pass")
+    if photo_count < 2 and mode != "text":
+        _ts("tool_executor: few photos — running caption fallback pass")
         try:
             fallback_results = retrieve(
                 query=state["query"],
                 mode="caption_only",
-                k=10,
+                k=DEFAULT_K,
                 image_where=image_filter,
+                auto_expand=True,
             )
             tool_trace.append(f"caption_fallback(q={state['query'][:40]!r})")
             log.info(f"[tool_executor] caption fallback returned {len(fallback_results)} docs")
@@ -724,9 +898,7 @@ _CATEGORY_RULES: list[tuple[str, list[str]]] = [
         "sim card", "data plan", "roaming", "vodafone", "ee", "o2",
         "three", "at&t", "verizon", "t-mobile",
     ]),
-    ("cash withdrawal", [
-        "atm", "cash", "withdrawal", "cashpoint",
-    ]),
+    ("cash withdrawal", ["atm", "cash", "withdrawal", "cashpoint"]),
 ]
 
 
@@ -746,30 +918,22 @@ _ENRICHER_SYSTEM = """You are enriching bank transaction records with inferred a
 
 For each transaction you will be given:
   - The raw transaction (payee, amount, existing category if any, date)
-  - Photos taken on the same or adjacent day (AI captions describing what was seen)
-  - Map places saved on the same trip (names, types, addresses)
+  - Photos taken on the same or adjacent day (AI captions)
+  - Map places saved on the same trip
 
 Your job: infer the most specific activity label possible.
 
 Rules:
-  - If a photo caption describes an activity that plausibly matches the transaction
-    payee/amount, use that activity as the label
-  - If a map save matches the payee name or area, use the place type to refine
-  - If no cross-modal evidence exists, infer from payee and description text alone
-  - Never invent specifics not supported by the evidence
-  - Keep labels concise: 3-8 words
+  - Use photo captions to refine the activity label when plausible
+  - Use map saves to refine place type
+  - Never invent specifics not in the evidence
+  - Labels: 3-8 words, concise
 
-Respond with ONLY a JSON array, one object per transaction:
+Return ONLY a JSON array:
 [{"id": "txn_001", "inferred_activity": "street food at night market"}, ...]"""
 
 
 def transaction_enricher(state: dict) -> dict:
-    """
-    Enrich transaction records with inferred activity labels:
-      1. Rule-based inference from payee/description/address (fast, no LLM)
-      2. LLM inference for ambiguous transactions cross-referencing same-day
-         photos and map saves
-    """
     _ts("transaction_enricher: start")
     docs = state.get("retrieved_docs", [])
     if not docs:
@@ -790,7 +954,7 @@ def transaction_enricher(state: dict) -> dict:
             "tool_calls": state.get("tool_calls", []) + ["transaction_enricher(no_txns)"],
         }
 
-    # ── Pass 1: rule-based ────────────────────────────────────────
+    # Pass 1: rule-based
     rule_enriched = 0
     for txn in transactions:
         meta = txn.get("metadata", {})
@@ -808,7 +972,7 @@ def transaction_enricher(state: dict) -> dict:
 
     log.info(f"[transaction_enricher] rule-based: {rule_enriched}/{len(transactions)} categorised")
 
-    # ── Pass 2: LLM inference ─────────────────────────────────────
+    # Pass 2: LLM inference
     def _date_key(doc: dict) -> str:
         dt = _extract_date(doc)
         return dt.date().isoformat() if dt else "unknown"
@@ -824,7 +988,7 @@ def transaction_enricher(state: dict) -> dict:
     for txn in transactions:
         meta     = txn.get("metadata", {})
         txn_date = _date_key(txn)
-        has_photos      = bool(photos_by_date.get(txn_date) or photos_by_date.get("unknown"))
+        has_photos       = bool(photos_by_date.get(txn_date) or photos_by_date.get("unknown"))
         already_specific = bool(meta.get("inferred_activity")) and not has_photos
         if not already_specific:
             to_enrich_llm.append(txn)
@@ -836,8 +1000,7 @@ def transaction_enricher(state: dict) -> dict:
             meta     = txn.get("metadata", {})
             txn_date = _date_key(txn)
             same_day_photos = (
-                photos_by_date.get(txn_date, []) +
-                photos_by_date.get("unknown", [])
+                photos_by_date.get(txn_date, []) + photos_by_date.get("unknown", [])
             )[:4]
             same_day_maps = map_by_date.get(txn_date, [])[:3]
             txn_blocks.append({
@@ -894,7 +1057,6 @@ def transaction_enricher(state: dict) -> dict:
 # ---------------------------------------------------------------------------
 
 def temporal_correlator(state: dict) -> dict:
-    """Group retrieved docs into trip windows by timestamp proximity."""
     _ts("temporal_correlator: start")
     if not ENABLE_TEMPORAL_CORRELATION:
         _ts("temporal_correlator: disabled (ablation)")
@@ -924,7 +1086,7 @@ def temporal_correlator(state: dict) -> dict:
 
     log.info(f"[temporal_correlator] {len(windows)} windows | txn={n_txn}  map={n_map}  photo={n_photo}  undated={len(undated_docs)}")
     for i, w in enumerate(windows, 1):
-        log.info(f"[temporal_correlator] window {i}: {w['start']} -> {w['end']} ({w['days']}d)  txn={len(w['transactions'])}  map={len(w['map'])}  photo={len(w['photos'])}")
+        log.info(f"[temporal_correlator] window {i}: {w['start']} -> {w['end']} ({w['days']}d)")
 
     temporal_context = _windows_to_context(windows, undated_docs)
     _ts(f"temporal_correlator: done  ({len(windows)} windows)")
@@ -945,46 +1107,35 @@ _ANALYSER_SYSTEM = """You are an analyst reconstructing a user's travel activiti
   MAP SAVES     — places they bookmarked (name, type, address, rating)
   PHOTOS        — what they were seeing/doing (AI caption, GPS, date)
 
-The evidence arrives grouped into TRIP WINDOWS — clusters of records that share
-overlapping dates (within a few days of each other). Your job is to fuse all three
-sources within each window to reconstruct what actually happened.
+Evidence arrives grouped into TRIP WINDOWS — clusters of records sharing overlapping dates.
+Fuse all three sources within each window to reconstruct what actually happened.
 
-If one or more images are directly attached to this message, treat them as
-additional first-hand photo evidence. Describe what you see in each image and
-incorporate it into the analysis alongside the retrieved documents.
+If images are directly attached, treat them as first-hand photo evidence.
 
 FUSION RULES:
-0. Check for pre-enriched activity labels — transactions may already carry an
-   'inferred_activity' field. If present, use it as the primary activity description.
-1. Anchor to dates — if a photo and a transaction share the same date or are within
-   1 day of each other, treat them as the SAME activity unless content contradicts it.
-2. Photos reveal the activity — always let the photo description refine the transaction label.
+0. Check pre-enriched activity labels on transactions — use them as primary activity descriptions.
+1. Anchor to dates — photo + transaction on same/adjacent date = same activity unless contradicted.
+2. Photos reveal the activity — let captions refine transaction labels.
 3. Map saves provide intent and context.
-4. When no transaction matches a photo — note these as zero-cost activities.
-5. When no photo matches a transaction — describe the transaction category only.
-   Do not invent activities.
+4. No transaction for a photo activity → note as zero-cost activity.
+5. No photo for a transaction → describe category only. Do NOT invent.
 
-For each trip window, output:
+For each trip window output:
   - Date range and destination
-  - Reconstructed daily activities (fuse transaction + photo + map where possible)
+  - Reconstructed daily activities (fuse transaction + photo + map)
   - Spending breakdown by actual activity
-  - What the photos reveal about travel style and preferences
-  - Zero-cost activities visible in photos but absent from transactions
+  - What photos reveal about travel style
+  - Zero-cost activities visible in photos
 
-End with a cross-window summary covering:
+Cross-window summary:
   - Overall spending patterns by activity type
-  - Recurring preferences visible across multiple trips
-  - Anything notable about how photo evidence changes the interpretation of transactions
+  - Recurring preferences across trips
+  - How photo evidence changes interpretation of transactions
 
-Be specific. Quote dates, amounts, place names, and photo descriptions where available."""
+Be specific: quote dates, amounts, place names, photo descriptions."""
 
 
 def analyser(state: dict) -> dict:
-    """
-    Analyse retrieved evidence to extract facts, patterns, and constraints.
-    When image_paths are present, encodes them and sends to the VLM so the
-    images become part of the evidence alongside retrieved documents.
-    """
     _ts("analyser: start")
     docs             = state.get("retrieved_docs", [])
     temporal_context = state.get("temporal_context", "")
@@ -1006,7 +1157,7 @@ def analyser(state: dict) -> dict:
     model        = _vlm if image_blocks else _llm
 
     if image_blocks:
-        log.info(f"[analyser] {len(image_blocks)} image(s) attached — using VLM ({_GROQ_VLM_MODEL})")
+        log.info(f"[analyser] {len(image_blocks)} image(s) attached — using VLM")
 
     text_content = (
         f"User preferences: {memory_str}\n\n"
@@ -1029,24 +1180,22 @@ def analyser(state: dict) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Node 7a -- Direct Responder  (lookup path)
+# Node 7a -- Direct Responder
 # ---------------------------------------------------------------------------
 
 _DIRECT_SYSTEM = """You are a travel assistant answering questions about the user's personal travel history.
 
-You have been given a structured analysis of the relevant evidence.
-Answer the user's question directly and precisely from this analysis.
+Answer directly and precisely from the analysis provided.
 
 Guidelines:
 - Be specific — use destinations, amounts, dates from the analysis
 - For spending: group by category, give totals or estimates
-- For factual lookups: give the direct answer, don't pad
+- For date/period questions: give the earliest and latest dates found for that destination
 - Do NOT mention "analysis", "evidence", "documents", or any technical process
 - Write as if you know the user's travel history personally"""
 
 
 def direct_responder(state: dict) -> dict:
-    """Lookup path: answer directly from the analysis."""
     _ts("direct_responder: start")
     analysis = state.get("analysis", "(no analysis)")
     memory   = state.get("memory", {})
@@ -1066,26 +1215,23 @@ def direct_responder(state: dict) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Node 7b -- Creative Responder  (generative path)
+# Node 7b -- Creative Responder
 # ---------------------------------------------------------------------------
 
 _CREATIVE_SYSTEM = """You are a travel assistant making personalised recommendations based on the user's travel history.
 
-You have been given a structured analysis of the user's past trips, spending patterns, and travel style.
-Use this analysis to generate a recommendation for something NEW — not somewhere they have already been.
+Use the analysis to generate recommendations for something NEW — not somewhere they've already been.
 
 Guidelines:
-- Identify destinations already visited from the analysis and explicitly EXCLUDE them
-- Reason from their budget (typical spend), travel style, and what they seem to enjoy
-- Suggest 2-3 specific new destinations with justification tied to their past behaviour
-- Give an estimated budget based on their typical spending patterns
-- Be concrete and personal — reference their actual history in your reasoning
-- Do NOT mention "analysis", "evidence", "documents", or any technical process
-- If you cannot determine past destinations clearly, say so and give a best-effort recommendation"""
+- Identify already-visited destinations and EXCLUDE them
+- Reason from budget, travel style, and what they enjoy
+- Suggest 2-3 specific new destinations with justification tied to their history
+- Give estimated budget based on typical spending patterns
+- Reference their actual history in your reasoning
+- Do NOT mention "analysis", "evidence", "documents", or any technical process"""
 
 
 def creative_responder(state: dict) -> dict:
-    """Generative path: produce a new recommendation/plan from the analysis."""
     _ts("creative_responder: start")
     analysis = state.get("analysis", "(no analysis)")
     memory   = state.get("memory", {})
@@ -1105,7 +1251,6 @@ def creative_responder(state: dict) -> dict:
 
 
 def _build_output(state: dict, answer: str) -> dict:
-    """Shared output builder for both responder nodes."""
     grounded   = True
     ungrounded = []
 
