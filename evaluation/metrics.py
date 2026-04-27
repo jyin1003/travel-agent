@@ -2,8 +2,8 @@
 evaluation/metrics.py
 
 Metrics:
-    compute_mrr(retrieved_ids, gold_ids)            → float
-    compute_recall_at_k(retrieved_ids, gold_ids, k) → float
+    compute_mrr(retrieved_ids, ground_truth_ids)            → float
+    compute_recall_at_k(retrieved_ids, ground_truth_ids, k) → float
     llm_judge(query, answer, context)               → dict
 
 Ground truth notes
@@ -52,16 +52,16 @@ def _get_groq_client() -> Groq:
 
 # ── Retrieval metrics ─────────────────────────────────────────────────────────
 
-def compute_mrr(retrieved_ids: list[str], gold_ids: list[str]) -> float:
+def compute_mrr(retrieved_ids: list[str], ground_truth_ids: list[str]) -> float:
     """
     Mean Reciprocal Rank: 1/rank of the first gold doc in the retrieved list.
 
     Measures how highly ranked the first relevant result is.
     For multi-doc ground truths, scores the *best-ranked* gold doc.
     """
-    if not gold_ids or not retrieved_ids:
+    if not ground_truth_ids or not retrieved_ids:
         return 0.0
-    gold_set = set(gold_ids)
+    gold_set = set(ground_truth_ids)
     for rank, doc_id in enumerate(retrieved_ids, start=1):
         if doc_id in gold_set:
             return round(1.0 / rank, 4)
@@ -70,7 +70,7 @@ def compute_mrr(retrieved_ids: list[str], gold_ids: list[str]) -> float:
 
 def compute_recall_at_k(
     retrieved_ids: list[str],
-    gold_ids: list[str],
+    ground_truth_ids: list[str],
     k: int = 5,
 ) -> float:
     """
@@ -85,9 +85,9 @@ def compute_recall_at_k(
         gold = [A, B, C, D],  top-5 retrieves [A, B, X, Y, Z]  → 2/4 = 0.5
         gold = [A, B],        top-5 retrieves [A, B, X, Y, Z]  → 2/2 = 1.0
     """
-    if not gold_ids or not retrieved_ids:
+    if not ground_truth_ids or not retrieved_ids:
         return 0.0
-    gold_set  = set(gold_ids)
+    gold_set  = set(ground_truth_ids)
     top_k_set = set(retrieved_ids[:k])
     hits      = gold_set & top_k_set
     return round(len(hits) / len(gold_set), 4)

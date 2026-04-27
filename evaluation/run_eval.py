@@ -147,11 +147,11 @@ def run_evaluation() -> list[dict]:
                 session_memory.update(result.get("memory", {}))
 
             # ── MRR + Recall@k ────────────────────────────────────────────
-            # FIX: ground_truth.json uses "ground_truth_ids", not "gold_ids"
+            # FIX: ground_truth.json uses "ground_truth_ids", not "ground_truth_ids"
             retrieved_ids = [d["id"] for d in result.get("retrieved_docs", [])]
-            gold_ids      = ground_truth.get(qid, {}).get("ground_truth_ids", [])
-            mrr           = compute_mrr(retrieved_ids, gold_ids)           if gold_ids else None
-            recall        = compute_recall_at_k(retrieved_ids, gold_ids, k=RECALL_K) if gold_ids else None
+            ground_truth_ids      = ground_truth.get(qid, {}).get("ground_truth_ids", [])
+            mrr           = compute_mrr(retrieved_ids, ground_truth_ids)           if ground_truth_ids else None
+            recall        = compute_recall_at_k(retrieved_ids, ground_truth_ids, k=RECALL_K) if ground_truth_ids else None
 
             # ── LLM-as-judge ─────────────────────────────────────────────────
             context_preview = " ".join(
