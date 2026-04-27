@@ -6,15 +6,9 @@ Output: evaluation/results.csv
 
 Usage
 -----
-PowerShell (Windows):
-    $env:EVAL_VARIANTS="S4"; $env:EVAL_QUERY_IDS="Q1,Q2,Q3"; python -m evaluation.run_eval
-    # Clean up after:
-    Remove-Item Env:EVAL_VARIANTS; Remove-Item Env:EVAL_QUERY_IDS
+Set EVAL_VARIANTS and EVAL_QUERY_IDS in .env or leave blank for the entire suite
 
-Bash / Mac / Linux:
-    EVAL_VARIANTS=S4 EVAL_QUERY_IDS=Q1,Q2,Q3 python -m evaluation.run_eval
-
-Full run (all variants, all queries):
+Run with:
     python -m evaluation.run_eval
 
 Rate limiting notes
@@ -147,8 +141,12 @@ def run_evaluation() -> list[dict]:
                 session_memory.update(result.get("memory", {}))
 
             # ── MRR + Recall@k ────────────────────────────────────────────
-            # FIX: ground_truth.json uses "ground_truth_ids", not "ground_truth_ids"
             retrieved_ids = [d["id"] for d in result.get("retrieved_docs", [])]
+            print(f"    [eval] retrieved ids: {retrieved_ids[:5]}")
+            # retrieved_ids = [
+            #     d["id"] if d["id"].startswith("txn_") else f"txn_{d['id']}"
+            #     for d in result.get("retrieved_docs", [])
+            # ]
             ground_truth_ids      = ground_truth.get(qid, {}).get("ground_truth_ids", [])
             mrr           = compute_mrr(retrieved_ids, ground_truth_ids)           if ground_truth_ids else None
             recall        = compute_recall_at_k(retrieved_ids, ground_truth_ids, k=RECALL_K) if ground_truth_ids else None

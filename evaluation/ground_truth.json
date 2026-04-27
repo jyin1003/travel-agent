@@ -1,42 +1,19 @@
 {
   "Q1": {
     "ground_truth_ids": [
-      "txn_1143e89c-58d9-4a4b-9578-539880ebfadc",
       "txn_1254db2f-9374-449d-8b9d-3758f5817097",
       "txn_2ae10413-7ec8-4775-818f-1cd69c631934",
-      "txn_388b1857-fe48-4e25-9543-bcd6205e8747"
+      "txn_388b1857-fe48-4e25-9543-bcd6205e8747",
+      "txn_77f0fb4e-0186-4659-a5bb-32a443a1f86a",
+      "txn_a48af95c-8dee-4977-9461-be0a09c73196",
+      "txn_d97aab26-cedb-4366-91d3-04a78cd380e5",
+      "txn_1143e89c-58d9-4a4b-9578-539880ebfadc",
+      "txn_c588b41e-0d6f-48f4-a838-ba5880b20514",
+      "txn_00c0f9bd-7c6a-4d05-ab3f-d0648f241b3e",
+      "txn_bad3ac20-f2c0-441a-b319-d0d5295fefff",
+      "txn_c01daf32-3a72-45a1-8385-c39c49070fd9"
     ],
-    "candidates": [
-      {
-        "id": "txn_1143e89c-58d9-4a4b-9578-539880ebfadc",
-        "source_type": "transaction",
-        "destination": "TOUKIYOUTO",
-        "date": "2025-12-16",
-        "preview": "On 2025-12-16T04:49:14+00:00 debit of 16.81 at Japan Railway East \u2014 EAST JAPAN RAILWAY ,TOUKIYOUTO (Public Transport) at"
-      },
-      {
-        "id": "txn_1254db2f-9374-449d-8b9d-3758f5817097",
-        "source_type": "transaction",
-        "destination": null,
-        "date": "2025-12-22",
-        "preview": "On 2025-12-22T22:14:48+00:00 debit of 19.61 at Japan Railway East \u2014 EAST JAPAN RAILWAY ,TOUKIYOUTO (Public Transport) at"
-      },
-      {
-        "id": "txn_2ae10413-7ec8-4775-818f-1cd69c631934",
-        "source_type": "transaction",
-        "destination": null,
-        "date": "2025-12-22",
-        "preview": "On 2025-12-22T21:56:34+00:00 debit of 19.61 at Japan Railway East \u2014 JR EAST, TOUKIYOUTO (Public Transport) at TOUKIYOUTO"
-      },
-      {
-        "id": "txn_388b1857-fe48-4e25-9543-bcd6205e8747",
-        "source_type": "transaction",
-        "destination": "Kyoto",
-        "date": "2025-12-27",
-        "preview": "On 2025-12-27T01:51:16+00:00 debit of 115.02 at Hozugawa River Boat Ride (Hozugawa Kudari) \u2014 HOZUGAWAKUDARI, KYOTO (Groc"
-      }
-    ],
-    "note": "filtered for 4"
+    "note": "filtered for 11"
   },
   "Q2": {
     "ground_truth_ids": [

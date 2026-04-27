@@ -52,6 +52,7 @@ import json
 import logging
 import os
 import re
+import time
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -116,8 +117,23 @@ DEFAULT_K: int = int(os.getenv("AGENT_K", "25"))
 _GROQ_MODEL     = os.getenv("GROQ_MODEL",     "llama-3.3-70b-versatile")
 _GROQ_VLM_MODEL = os.getenv("GROQ_VLM_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct")
 
-_llm = ChatGroq(model=_GROQ_MODEL,     temperature=0, api_key=os.getenv("GROQ_API_KEY"))
-_vlm = ChatGroq(model=_GROQ_VLM_MODEL, temperature=0, api_key=os.getenv("GROQ_API_KEY"))
+_INTER_CALL_SLEEP = float(os.getenv("GROQ_INTER_CALL_SLEEP", "1.5"))
+
+class _RateLimitedGroq:
+    """Wraps ChatGroq to add a short sleep before every invoke, preventing RPM bursts."""
+    def __init__(self, model: str, **kwargs):
+        self._llm = ChatGroq(model=model, **kwargs)
+
+    def invoke(self, *args, **kwargs):
+        time.sleep(_INTER_CALL_SLEEP)
+        return self._llm.invoke(*args, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._llm, name)
+
+
+_llm = _RateLimitedGroq(model=_GROQ_MODEL,     temperature=0, api_key=os.getenv("GROQ_API_KEY"))
+_vlm = _RateLimitedGroq(model=_GROQ_VLM_MODEL, temperature=0, api_key=os.getenv("GROQ_API_KEY"))
 
 # ---------------------------------------------------------------------------
 # Image encoding helper

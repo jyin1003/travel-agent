@@ -25,29 +25,18 @@ import json
 import os
 import re
 import time
+import requests
 
-from groq import Groq
 from dotenv import load_dotenv
 
 load_dotenv()
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
-_JUDGE_SLEEP_S = float(os.getenv("EVAL_JUDGE_SLEEP",    "2.5"))
-_JUDGE_MODEL   = os.getenv("EVAL_JUDGE_MODEL",           "qwen/qwen3-32b")
-_JUDGE_MAX_TOK = int(os.getenv("EVAL_JUDGE_MAX_TOKENS", "256"))
-
-_groq_client: Groq | None = None
-
-
-def _get_groq_client() -> Groq:
-    global _groq_client
-    if _groq_client is None:
-        api_key = os.getenv("GROQ_API_KEY")
-        if not api_key:
-            raise RuntimeError("GROQ_API_KEY not set — cannot run LLM judge")
-        _groq_client = Groq(api_key=api_key)
-    return _groq_client
+_JUDGE_MODEL   = os.getenv("EVAL_JUDGE_MODEL", "mistral")
+_OLLAMA_URL    = os.getenv("OLLAMA_URL", "http://localhost:11434")
+_JUDGE_MAX_TOK = int(os.getenv("EVAL_JUDGE_MAX_TOKENS", "512"))
+_JUDGE_SLEEP_S = float(os.getenv("EVAL_JUDGE_SLEEP", "0.5"))  # no rate limit locally
 
 
 # ── Retrieval metrics ─────────────────────────────────────────────────────────
@@ -97,23 +86,9 @@ def compute_recall_at_k(
 
 _JUDGE_SYSTEM = (
     "You are an evaluation judge. Score the answer on four dimensions, "
-    "each from 1 to 5. Return ONLY valid JSON with no extra text or markdown."
+    "each from 1 to 5. Return ONLY a JSON object with no explanation, "
+    "no reasoning, no markdown, no preamble. Just the raw JSON."
 )
-
-_JUDGE_PROMPT = """\
-Question: {query}
-{context_line}
-Answer: {answer}
-
-Score each dimension 1–5 (1=very poor, 5=excellent):
-- factual_accuracy: are stated facts correct?
-- groundedness: are claims supported by the context (if provided)?
-- relevance: does the answer address the question?
-- completeness: does it cover all parts of the question?
-- mean: average of the four scores (float, 1 decimal place)
-
-Return ONLY valid JSON:
-{{"factual_accuracy": N, "groundedness": N, "relevance": N, "completeness": N, "mean": N.N}}"""
 
 _ZERO_SCORES = {
     "factual_accuracy": 0,
@@ -124,56 +99,67 @@ _ZERO_SCORES = {
 }
 
 
-def llm_judge(query: str, answer: str, context: str = "") -> dict:
-    """
-    Score an answer using qwen/qwen3-32b as judge.
 
-    Sleeps _JUDGE_SLEEP_S after the call to stay within Groq RPM limits.
-    Context truncated to 400 chars, answer to 600 chars to manage TPM.
-    """
+def llm_judge(query: str, answer: str, context: str = "") -> dict:
     if not answer or not answer.strip():
         time.sleep(_JUDGE_SLEEP_S)
         return _ZERO_SCORES.copy()
 
     context_line = f"Context (excerpt): {context[:400]}" if context else ""
 
-    prompt = _JUDGE_PROMPT.format(
-        query=query,
-        context_line=context_line,
-        answer=answer[:600],
+    prompt = (
+        f"Question: {query}\n"
+        f"{context_line}\n"
+        f"Answer: {answer[:600]}\n\n"
+        "Score each 1-5:\n"
+        "- factual_accuracy\n"
+        "- groundedness\n"
+        "- relevance\n"
+        "- completeness\n\n"
+        "Output ONLY this JSON and nothing else:\n"
+        '{"factual_accuracy": N, "groundedness": N, "relevance": N, "completeness": N, "mean": N.N}'
     )
 
-    client = _get_groq_client()
-    try:
-        response = client.chat.completions.create(
-            model=_JUDGE_MODEL,
-            messages=[
-                {"role": "system", "content": _JUDGE_SYSTEM},
-                {"role": "user",   "content": prompt},
-            ],
-            temperature=0,
-            max_tokens=_JUDGE_MAX_TOK,
-        )
-        raw = response.choices[0].message.content or ""
+    for attempt in range(3):
+        try:
+            response = requests.post(
+                f"{_OLLAMA_URL}/api/chat",
+                json={
+                    "model": _JUDGE_MODEL,
+                    "messages": [
+                        {"role": "system", "content": "You are an evaluation judge. Return ONLY valid JSON, no explanation, no markdown."},
+                        {"role": "user",   "content": prompt},
+                    ],
+                    "stream": False,
+                    "options": {"num_predict": _JUDGE_MAX_TOK, "temperature": 0},
+                },
+                timeout=60,
+            )
+            response.raise_for_status()
+            raw = response.json()["message"]["content"] or ""
+            print(f"    [judge] raw response: {raw[:200]}")
 
-        # Strip <think>...</think> blocks (qwen3 chain-of-thought output)
-        raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
+            raw = re.sub(r"```(?:json)?", "", raw).strip().rstrip("`")
 
-        match = re.search(r"\{.*\}", raw, re.DOTALL)
-        if match:
-            scores = json.loads(match.group())
-            # Recompute mean from the four scores (don't trust model's arithmetic)
-            nums = [
-                float(scores.get(k, 0))
-                for k in ("factual_accuracy", "groundedness", "relevance", "completeness")
-            ]
-            scores["mean"] = round(sum(nums) / len(nums), 1) if nums else 0.0
-            return scores
+            match = re.search(r"\{.*\}", raw, re.DOTALL)
+            if match:
+                scores = json.loads(match.group())
+                nums = [
+                    float(scores.get(k, 0))
+                    for k in ("factual_accuracy", "groundedness", "relevance", "completeness")
+                ]
+                scores["mean"] = round(sum(nums) / len(nums), 1) if nums else 0.0
+                return scores
+            else:
+                print(f"    [judge] no JSON found. Raw:\n{raw[:300]}")
+                break
 
-    except Exception as e:
-        print(f"    [judge] error: {e}")
+        except Exception as e:
+            print(f"    [judge] attempt {attempt+1} error: {e}")
+            if attempt < 2:
+                time.sleep(5)
 
-    finally:
-        time.sleep(_JUDGE_SLEEP_S)
+        finally:
+            time.sleep(_JUDGE_SLEEP_S)
 
     return _ZERO_SCORES.copy()
