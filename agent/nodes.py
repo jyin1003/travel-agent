@@ -77,6 +77,8 @@ from src.retrieval.retriever import (
     broad_retrieve,
 )
 
+from src.ingestion.chunker import _load_enrich_cache as _load_txn_enrich_cache
+
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
@@ -984,10 +986,27 @@ def transaction_enricher(state: dict) -> dict:
     for m in map_saves:
         map_by_date.setdefault(_date_key(m), []).append(m)
 
+    _enrich_cache = _load_txn_enrich_cache()
+
     to_enrich_llm = []
     for txn in transactions:
         meta     = txn.get("metadata", {})
+        txn_id   = meta.get("transaction_id") or txn["id"]
         txn_date = _date_key(txn)
+
+        # If the cache already has a result for this transaction, apply it directly
+        if txn_id in _enrich_cache:
+            cached = _enrich_cache[txn_id]
+            activity = cached.get("inferred_activity")
+            city     = cached.get("inferred_city")
+            if activity and not meta.get("inferred_activity"):
+                meta["inferred_activity"] = activity
+                if "[activity:" not in txn.get("document", ""):
+                    txn["document"] = txn.get("document", "") + f" [activity: {activity}]"
+            if city and not meta.get("destination"):
+                meta["destination"] = city
+            continue   # skip LLM for this one
+
         has_photos       = bool(photos_by_date.get(txn_date) or photos_by_date.get("unknown"))
         already_specific = bool(meta.get("inferred_activity")) and not has_photos
         if not already_specific:

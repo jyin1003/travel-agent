@@ -712,9 +712,6 @@ def build_all_chunks(
     """
     all_text: list[TextChunk] = []
 
-    print("[chunker] Processing transactions CSV...")
-    all_text += chunk_transactions_csv(transactions_csv)
-
     print("[chunker] Processing maps CSVs...")
     map_csvs = glob.glob(os.path.join(maps_dir, "*.csv"))
     for csv_path in sorted(map_csvs):
