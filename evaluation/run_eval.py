@@ -87,7 +87,7 @@ _GT_PATH        = _EVAL_DIR / "ground_truth.json"
 # ── CSV field names ───────────────────────────────────────────────────────────
 
 _FIELDNAMES = [
-    "variant", "query_id", "family", "query", "answer_preview",
+    "variant", "query_id", "family", "query", "answer",
     "latency_s", "tool_call_count", "mrr", f"recall_at_{RECALL_K}",
     "judge_accuracy", "judge_grounded", "judge_relevance",
     "judge_complete", "judge_mean",
@@ -305,7 +305,7 @@ def run_evaluation() -> list[dict]:
 
             # ── MRR + Recall@k ────────────────────────────────────────────
             retrieved_ids = [d["id"] for d in result.get("retrieved_docs", [])]
-            print(f"    [eval] retrieved ids: {retrieved_ids[:5]}")
+            print(f"    [eval] retrieved {len(retrieved_ids)} docs with ids: {retrieved_ids}")
             ground_truth_ids = ground_truth.get(qid, {}).get("ground_truth_ids", [])
             mrr              = compute_mrr(retrieved_ids, ground_truth_ids)           if ground_truth_ids else None
             recall           = compute_recall_at_k(retrieved_ids, ground_truth_ids, k=RECALL_K) if ground_truth_ids else None
@@ -318,7 +318,7 @@ def run_evaluation() -> list[dict]:
             print(f"    judging answer ({len(result.get('answer',''))} chars)...")
             scores = llm_judge(query, result.get("answer", ""), context_preview)
 
-            answer_preview = result.get("answer", "")[:200].replace("\n", " ")
+            answer = result.get("answer", "").replace("\n", " ")
             print(f"    MRR={mrr}  Recall@{RECALL_K}={recall}  "
                   f"judge_mean={scores.get('mean')}  latency={wall_s}s")
 
@@ -327,7 +327,7 @@ def run_evaluation() -> list[dict]:
                 "query_id":             qid,
                 "family":               FAMILIES.get(qid, "?"),
                 "query":                query,
-                "answer_preview":       answer_preview,
+                "answer":               answer,
                 "latency_s":            wall_s,
                 "tool_call_count":      len(result.get("tool_calls", [])),
                 "mrr":                  mrr      if mrr      is not None else "N/A",

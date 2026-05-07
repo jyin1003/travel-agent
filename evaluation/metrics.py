@@ -111,13 +111,13 @@ def llm_judge(query: str, answer: str, context: str = "") -> dict:
         f"Question: {query}\n"
         f"{context_line}\n"
         f"Answer: {answer[:600]}\n\n"
-        "Score each 1-5:\n"
-        "- factual_accuracy\n"
-        "- groundedness\n"
-        "- relevance\n"
-        "- completeness\n\n"
-        "Output ONLY this JSON and nothing else:\n"
-        '{"factual_accuracy": N, "groundedness": N, "relevance": N, "completeness": N, "mean": N.N}'
+        "Score each dimension from 1 to 5 where 1=very poor and 5=excellent:\n"
+        "- factual_accuracy: are the stated facts correct?\n"
+        "- groundedness: are claims supported by the context?\n"
+        "- relevance: does the answer address the question?\n"
+        "- completeness: does it cover all parts of the question?\n\n"
+        "Example output: {\"factual_accuracy\": 4, \"groundedness\": 3, \"relevance\": 5, \"completeness\": 4, \"mean\": 4.0}\n\n"
+        "Now score the answer above. Return ONLY the JSON object, no explanation:"
     )
 
     for attempt in range(3):
