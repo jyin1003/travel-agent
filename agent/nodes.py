@@ -10,49 +10,42 @@ Node pipeline:
                                             |
                                        analyser
                                             |
-                               ┌────────────┴────────────┐
+                               ┌------------------------┴------------------------┐
                                ▼                         ▼
                         (lookup path)            (generative path)
                       direct_responder         creative_responder
-                               └────────────┬────────────┘
+                               └------------------------┬------------------------┘
                                             ▼
                                            END
 
-Retrieval improvements (v2)
----------------------------
+Query time retrieval improvements:
+-------------------------------------
 1. Country-level expansion in retrieval_planner:
-   - The planner now always outputs a `geo_scope` field with the inferred
-     country (e.g. "Japan" for a query about "Tokyo").
-   - text_filter and image_filter are set at COUNTRY level when the query
-     is country-scoped, city level only when hyper-local precision is needed.
-   - This fixes Q1-style failures where documents are tagged with cities
-     (e.g. destination="Tokyo") but the query uses the country name ("Japan").
+    - The planner now always outputs a `geo_scope` field with the inferred
+        country (e.g. "Japan" for a query about "Tokyo").
+    - text_filter and image_filter are set at COUNTRY level when the query
+        is country-scoped, city level only when hyper-local precision is needed.
+    - This fixes Q1-style failures where documents are tagged with cities
+        (e.g. destination="Tokyo") but the query uses the country name ("Japan").
 
 2. Broad retrieval fallback in tool_executor:
-   - After the main retrieval pass, if total unique docs < SPARSE_THRESHOLD,
-     tool_executor runs a second "broad" pass: no metadata filter, high k,
-     then post-filters in Python using the geo_terms set built from the query.
-   - This catches city-tagged documents that city-only filters miss.
+    - After the main retrieval pass, if total unique docs < SPARSE_THRESHOLD,
+        tool_executor runs a second "broad" pass: no metadata filter, high k,
+        then post-filters in Python using the geo_terms set built from the query.
+    - This catches city-tagged documents that city-only filters miss.
 
 3. Query expansion for conversational queries (Q4):
-   - When query_type == "conversational", tool_executor calls the LLM once
-     to expand the query into 3-5 semantically related sub-queries, then
-     runs each through retrieval and merges results.
-   - This dramatically broadens recall for preference-sensitive questions.
+    - When query_type == "conversational", tool_executor calls the LLM once
+        to expand the query into 3-5 semantically related sub-queries, then
+        runs each through retrieval and merges results.
+    - This dramatically broadens recall for preference-sensitive questions.
 
-4. Default k raised from 15 → 25 per sub-query.
-
-5. Caption fallback retained and triggered earlier (photo_count < 2).
+4. Caption fallback retained and triggered earlier (photo_count < 2).
 """
 
 from __future__ import annotations
 
-import base64
-import json
-import logging
-import os
-import re
-import time
+import base64, json, logging, os, re, time
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -363,34 +356,34 @@ _ROUTER_SYSTEM = """You are a query classifier for a personal travel knowledge b
 
 Classify the INTENT of the query:
 
-  "lookup"     - the answer exists directly in stored data; fetch and return it
-                 Examples: "how much did I spend in Tokyo", "when did I visit Berlin",
-                 "show me photos from my Japan trip", "what restaurants did I go to"
+    "lookup"     - the answer exists directly in stored data; fetch and return it
+                    Examples: "how much did I spend in Tokyo", "when did I visit Berlin",
+                    "show me photos from my Japan trip", "what restaurants did I go to"
 
-  "generative" - the answer requires reasoning FROM the data to produce something NEW
-                 that the user hasn't necessarily done/seen before
-                 Examples: "recommend somewhere to travel", "suggest a new destination",
-                 "what should I do next", "plan me a trip", "where should I go for X"
+    "generative" - the answer requires reasoning FROM the data to produce something NEW
+                    that the user hasn't necessarily done/seen before
+                    Examples: "recommend somewhere to travel", "suggest a new destination",
+                    "what should I do next", "plan me a trip", "where should I go for X"
 
 Also classify query_type (for retrieval planning):
-  "factual"        - direct fact lookup
-  "cross_modal"    - needs photos/visual content
-  "multi_hop"      - combines multiple evidence sources
-  "conversational" - references preferences or earlier turns
+    "factual"        - direct fact lookup
+    "cross_modal"    - needs photos/visual content
+    "multi_hop"      - combines multiple evidence sources
+    "conversational" - references preferences or earlier turns
 
 If one or more images are attached, treat them as additional query context.
 A query with images is almost always "cross_modal" or "factual".
 
 Memory flags:
-  memory_lookup = true  when stored preferences help answer
-  memory_write  = true  ONLY when query explicitly states a NEW personal preference
+    memory_lookup = true  when stored preferences help answer
+    memory_write  = true  ONLY when query explicitly states a NEW personal preference
 
 Respond with ONLY valid JSON:
 {
-  "intent": "lookup" or "generative",
-  "query_type": "...",
-  "memory_lookup": true/false,
-  "memory_write": true/false
+    "intent": "lookup" or "generative",
+    "query_type": "...",
+    "memory_lookup": true/false,
+    "memory_write": true/false
 }"""
 
 
@@ -491,10 +484,10 @@ If the query mentions or implies a country (Japan, Italy, Denmark, etc.), you MU
 
 1. Set `geo_scope` to the COUNTRY name (e.g. "Japan").
 2. Set `text_filter` and `image_filter` to {} (EMPTY — no filter).
-   This is because filtering by country name would miss city-tagged docs.
-   The tool_executor will do a broad post-filter using all known cities for that country.
+    This is because filtering by country name would miss city-tagged docs.
+    The tool_executor will do a broad post-filter using all known cities for that country.
 3. Include sub-queries using CITY NAMES of that country, not just the country name.
-   E.g. for Japan: use "Tokyo", "Osaka", "Kyoto", "Hiroshima" in sub-queries.
+    E.g. for Japan: use "Tokyo", "Osaka", "Kyoto", "Hiroshima" in sub-queries.
 
 If the query mentions a SPECIFIC CITY and you want precise results, you MAY set:
     text_filter: {"destination": "<city>"}
@@ -526,8 +519,9 @@ EXAMPLES:
 
 Query: how much did I spend on transport in Japan [intent=lookup]
 → geo_scope="Japan", filters EMPTY (city-tagged docs need broad search)
-{"geo_scope": "Japan",
- "sub_queries": [
+{
+    "geo_scope": "Japan",
+    "sub_queries": [
     "Tokyo train subway metro ticket transport",
     "Osaka bus rail transport ticket fare",
     "Kyoto transport taxi bus train",
@@ -538,28 +532,32 @@ Query: how much did I spend on transport in Japan [intent=lookup]
     "train station platform Japan travel photo",
     "subway metro underground Japan photo",
     "bus transport street Japan travel photo"
- ],
- "retrieval_mode": "full", "text_filter": {}, "image_filter": {}}
+    ],
+    "retrieval_mode": "full", "text_filter": {}, "image_filter": {}
+}
 
 Query: when did I visit Copenhagen [intent=lookup]
 → geo_scope="Denmark", filters EMPTY
-{"geo_scope": "Denmark",
- "sub_queries": [
-    "Copenhagen transaction payment spending",
-    "Copenhagen Kobenhavn Koebenhavn date visit",
-    "Denmark travel spending food transport",
-    "Copenhagen saved places restaurants attractions map",
-    "Copenhagen street canals colourful buildings photo",
-    "Denmark Scandinavia travel photo",
-    "Nyhavn harbour Copenhagen photo",
-    "Danish food smørrebrød pastry photo"
- ],
- "retrieval_mode": "full", "text_filter": {}, "image_filter": {}}
+{
+    "geo_scope": "Denmark",
+    "sub_queries": [
+        "Copenhagen transaction payment spending",
+        "Copenhagen Kobenhavn Koebenhavn date visit",
+        "Denmark travel spending food transport",
+        "Copenhagen saved places restaurants attractions map",
+        "Copenhagen street canals colourful buildings photo",
+        "Denmark Scandinavia travel photo",
+        "Nyhavn harbour Copenhagen photo",
+        "Danish food smørrebrød pastry photo"
+        ],
+    "retrieval_mode": "full", "text_filter": {}, "image_filter": {}
+}
 
 Query: what do I spend money on while travelling [intent=lookup]
 → no specific location, no geo_scope, no filters
-{"geo_scope": null,
- "sub_queries": [
+{
+    "geo_scope": null,
+    "sub_queries": [
     "restaurant food drink payment receipt",
     "transport taxi train bus ticket fare",
     "accommodation hotel hostel payment",
@@ -570,12 +568,14 @@ Query: what do I spend money on while travelling [intent=lookup]
     "tourist attraction museum sightseeing photo",
     "saved restaurants cafes food places map",
     "saved transport routes stations map"
- ],
- "retrieval_mode": "full", "text_filter": {}, "image_filter": {}}
+    ],
+    "retrieval_mode": "full", "text_filter": {}, "image_filter": {}
+}
 
 Query: recommend somewhere new to travel [intent=generative]
-{"geo_scope": null,
- "sub_queries": [
+{
+    "geo_scope": null,
+    "sub_queries": [
     "all destination transactions total costs",
     "accommodation food transport spending amounts",
     "saved map places countries points of interest",
@@ -584,8 +584,9 @@ Query: recommend somewhere new to travel [intent=generative]
     "food dining restaurant local cuisine photo",
     "beach ocean coastal scenery photo",
     "mountain hiking outdoor adventure photo"
- ],
- "retrieval_mode": "full", "text_filter": {}, "image_filter": {}}
+    ],
+    "retrieval_mode": "full", "text_filter": {}, "image_filter": {}
+}
 
 Respond ONLY with valid JSON:"""
 
@@ -625,7 +626,7 @@ def retrieval_planner(state: dict) -> dict:
     if not sub_queries:
         sub_queries = [state["query"]]
 
-    # ── geo_scope handling ────────────────────────────────────────────────────
+    # ---- geo_scope handling ---------------------------------------------------------
     geo_scope = parsed.get("geo_scope")  # e.g. "Japan", "Denmark", None
 
     # Resolve geo_scope to a canonical country and build geo_terms
@@ -635,7 +636,7 @@ def retrieval_planner(state: dict) -> dict:
         geo_terms = build_geo_terms(country)
         log.info(f"[planner] geo_scope={geo_scope!r} → geo_terms={geo_terms}")
 
-    # ── Filters: use EMPTY for country-scoped queries ─────────────────────────
+    # ---- Filters: use EMPTY for country-scoped queries ------------------------------------------------─
     text_filter  = parsed.get("text_filter")  or None
     image_filter = parsed.get("image_filter") or None
     if text_filter  == {}: text_filter  = None
@@ -681,8 +682,6 @@ def retrieval_planner(state: dict) -> dict:
 # ---------------------------------------------------------------------------
 # Node 4 -- Tool Executor
 # ---------------------------------------------------------------------------
-
-_ABLATION_MODES = {"dense_only", "bm25_only", "clip_only", "caption_only"}
 _MODE_TO_TOOL   = {"text": search_text_tool, "image": search_images_tool, "full": hybrid_search_tool}
 
 # Query expansion prompt for conversational queries (Q4-style)
@@ -735,7 +734,7 @@ def tool_executor(state: dict) -> dict:
     - k raised to DEFAULT_K (25) per sub-query
     - Conversational queries trigger LLM query expansion before retrieval
     - Country-scoped queries trigger a broad geo-filtered fallback pass
-      when results are sparse (< SPARSE_THRESHOLD unique docs)
+        when results are sparse (< SPARSE_THRESHOLD unique docs)
     - Caption fallback triggered earlier (photo_count < 2)
     """
     _ts("tool_executor: start")
@@ -752,7 +751,7 @@ def tool_executor(state: dict) -> dict:
         _sanitise_query(sq, state["query"]) for sq in raw_queries if sq
     )) or [state["query"]]
 
-    # ── Query expansion for conversational queries (Q4) ───────────────────────
+    # ---- Query expansion for conversational queries (Q4) --------------------------------------------─
     if query_type == "conversational":
         _ts("tool_executor: expanding conversational query")
         expanded = _expand_query_for_conversational(state["query"], state.get("memory", {}))
@@ -763,7 +762,7 @@ def tool_executor(state: dict) -> dict:
             combined = expanded + sub_queries
             sub_queries = list(dict.fromkeys(combined))
 
-    # ── Main retrieval pass ───────────────────────────────────────────────────
+    # ---- Main retrieval pass --------------------------------------------------------
     accumulated: dict[str, dict] = {}
     for sq in sub_queries:
         _ts(f"tool_executor: retrieve  q={sq[:50]!r}  mode={mode}")
@@ -786,7 +785,7 @@ def tool_executor(state: dict) -> dict:
         for r in results:
             accumulated[r["id"]] = r
 
-    # ── Broad geo fallback pass ───────────────────────────────────────────────
+    # ---- Broad geo fallback pass ------------------------------------------------
     # Triggered when: geo_scope is set AND we have too few docs.
     # Runs a wide unfiltered search then post-filters by all known geo terms.
     if geo_scope and len(accumulated) < SPARSE_THRESHOLD:
@@ -829,7 +828,7 @@ def tool_executor(state: dict) -> dict:
 
     all_docs = list(accumulated.values())
 
-    # ── Caption fallback (triggered if < 2 photos, not 0 as before) ───────────
+    # ---- Caption fallback (triggered if < 2 photos, not 0 as before) --------------------─
     photo_count = sum(
         1 for d in all_docs
         if d.get("metadata", {}).get("source_type") == "photo_caption"
@@ -935,17 +934,17 @@ def _rule_infer_category(payee: str, description: str, address: str = "") -> str
 _ENRICHER_SYSTEM = """You are enriching bank transaction records with inferred activity context.
 
 For each transaction you will be given:
-  - The raw transaction (payee, amount, existing category if any, date)
-  - Photos taken on the same or adjacent day (AI captions)
-  - Map places saved on the same trip
+    - The raw transaction (payee, amount, existing category if any, date)
+    - Photos taken on the same or adjacent day (AI captions)
+    - Map places saved on the same trip
 
 Your job: infer the most specific activity label possible.
 
 Rules:
-  - Use photo captions to refine the activity label when plausible
-  - Use map saves to refine place type
-  - Never invent specifics not in the evidence
-  - Labels: 3-8 words, concise
+    - Use photo captions to refine the activity label when plausible
+    - Use map saves to refine place type
+    - Never invent specifics not in the evidence
+    - Labels: 3-8 words, concise
 
 Return ONLY a JSON array:
 [{"id": "txn_001", "inferred_activity": "street food at night market"}, ...]"""
@@ -1138,9 +1137,9 @@ def temporal_correlator(state: dict) -> dict:
 
 _ANALYSER_SYSTEM = """You are an analyst reconstructing a user's travel activities from three linked data sources:
 
-  TRANSACTIONS  — what they paid for (merchant, amount, category, date)
-  MAP SAVES     — places they bookmarked (name, type, address, rating)
-  PHOTOS        — what they were seeing/doing (AI caption, GPS, date)
+TRANSACTIONS  — what they paid for (merchant, amount, category, date)
+MAP SAVES     — places they bookmarked (name, type, address, rating)
+PHOTOS        — what they were seeing/doing (AI caption, GPS, date)
 
 Evidence arrives grouped into TRIP WINDOWS — clusters of records sharing overlapping dates.
 Fuse all three sources within each window to reconstruct what actually happened.
@@ -1156,16 +1155,16 @@ FUSION RULES:
 5. No photo for a transaction → describe category only. Do NOT invent.
 
 For each trip window output:
-  - Date range and destination
-  - Reconstructed daily activities (fuse transaction + photo + map)
-  - Spending breakdown by actual activity
-  - What photos reveal about travel style
-  - Zero-cost activities visible in photos
+    - Date range and destination
+    - Reconstructed daily activities (fuse transaction + photo + map)
+    - Spending breakdown by actual activity
+    - What photos reveal about travel style
+    - Zero-cost activities visible in photos
 
 Cross-window summary:
-  - Overall spending patterns by activity type
-  - Recurring preferences across trips
-  - How photo evidence changes interpretation of transactions
+    - Overall spending patterns by activity type
+    - Recurring preferences across trips
+    - How photo evidence changes interpretation of transactions
 
 Be specific: quote dates, amounts, place names, photo descriptions."""
 

@@ -125,9 +125,9 @@ def _geocode(text: str, api_key: str) -> Optional[str]:
     _save_geo_cache(_geo_cache)
     return result
 
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 # Transaction enrichment (run at index time, results cached to disk)
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 
 _TXN_ENRICH_CACHE_PATH = Path(__file__).parent / "txn_enrich_cache.json"
 
@@ -221,7 +221,7 @@ def enrich_transactions_llm(
     if not chunks:
         return chunks
 
-    # ── Pass 1: rule-based ─────────────────────────────────────────────
+    # ---- Pass 1: rule-based -----------------------------------------------------------------------------------------
     for chunk in chunks:
         category = _rule_infer_category(
             chunk.extra.get("payee", ""),
@@ -232,13 +232,13 @@ def enrich_transactions_llm(
             chunk.extra["inferred_category"] = category
             chunk.text += f" [category: {category}]"
 
-    # ── API key check ──────────────────────────────────────────────────
+    # ---- API key check ----------------------------------------------------
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         print("[chunker] No GROQ_API_KEY — skipping LLM enrichment")
         return chunks
 
-    # ── Model fallback chain ───────────────────────────────────────────
+    # ---- Model fallback chain --------------------------------------------------------------------------------
     MODEL_CHAIN = [
         "llama-3.3-70b-versatile",
         "qwen/qwen3-32b",
@@ -251,7 +251,7 @@ def enrich_transactions_llm(
 
     cache = _load_enrich_cache()
 
-    # ── Filter uncached transactions ───────────────────────────────────
+    # ---- Filter uncached transactions --------------------------------------------------------------------
     to_enrich = []
     for chunk in chunks:
         txn_id = chunk.extra.get("transaction_id") or chunk.doc_id
@@ -267,7 +267,7 @@ def enrich_transactions_llm(
 
     client = Groq(api_key=api_key)
 
-    # ── Rate limiting ──────────────────────────────────────────────────
+    # ---- Rate limiting -----------------------------------------------------
     REQUESTS_PER_MIN = 30
     SAFETY_MARGIN = 0.8
     sleep_per_request = 60 / (REQUESTS_PER_MIN * SAFETY_MARGIN)  # ~2.5s
@@ -294,7 +294,7 @@ Return a JSON array in the same order.
 
     enriched_count = 0
 
-    # ── Batch loop ─────────────────────────────────────────────────────
+    # ---- Batch loop ------------------------------------------------------------
     for i in range(0, len(to_enrich), batch_size):
         batch = to_enrich[i : i + batch_size]
 
@@ -313,7 +313,7 @@ Return a JSON array in the same order.
         success = False
         rpm_retries = 0
 
-        # ── Model fallback loop ────────────────────────────────────────
+        # ---- Model fallback loop --------------------------------------------------------------------------------
         while model_index < len(MODEL_CHAIN):
             current_model = MODEL_CHAIN[model_index]
 
@@ -330,7 +330,7 @@ Return a JSON array in the same order.
                 raw = response.choices[0].message.content
                 raw = re.sub(r"```(?:json)?", "", raw).strip().rstrip("```")
 
-                # ── JSON parsing with recovery ───────────────────────
+                # ---- JSON parsing with recovery --------------------------------------------─
                 try:
                     items = json.loads(raw)
                 except:
@@ -355,14 +355,14 @@ Return a JSON array in the same order.
             except Exception as e:
                 error_str = str(e)
 
-                # 🔴 Token limit → switch model permanently
+                # Token limit → switch model permanently
                 if "rate_limit_exceeded" in error_str and "tokens" in error_str:
                     print(f"[chunker] {current_model} TPD exhausted → switching model")
                     model_index += 1
                     rpm_retries = 0
                     continue
 
-                # 🟡 RPM limit → retry SAME model
+                # RPM limit → retry SAME model
                 elif "429" in error_str:
                     rpm_retries += 1
                     if rpm_retries > 3:
@@ -375,7 +375,7 @@ Return a JSON array in the same order.
                     time.sleep(15)
                     continue
 
-                # 🔵 Other error → skip model
+                # Other error → skip model
                 else:
                     print(f"[chunker] {current_model} failed → switching model ({e})")
                     model_index += 1
@@ -388,11 +388,11 @@ Return a JSON array in the same order.
 
         print(f"[chunker] {min(i + batch_size, len(to_enrich))}/{len(to_enrich)} processed")
 
-        # ── Rate limiting between batches ──────────────────────────────
+        # ---- Rate limiting between batches ------------------------------------------------------------
         if i + batch_size < len(to_enrich):
             time.sleep(sleep_per_request)
 
-    # ── Save + apply cache ─────────────────────────────────────────────
+    # ---- Save + apply cache -----------------------------------------------------------------------------------------
     _save_enrich_cache(cache)
     _apply_cache(chunks, cache)
 
@@ -404,25 +404,25 @@ def _infer_destination(text: str, api_key: Optional[str] = None) -> Optional[str
     """
     Infer a destination city/country from an unstructured string (e.g. a
     transaction payee or address) using the Google Geocoding API.
- 
+
     Pass api_key explicitly, or set the GOOGLE_MAPS_API_KEY environment
     variable. If neither is available, returns None silently.
- 
+
     Results are cached to geocode_cache.json — each unique string is only
     looked up once; subsequent runs are instant with no API calls.
- 
+
     For sources that already have a structured city field (photo JSON,
     maps CSV), callers should use that directly and not call this function.
     """
     if not text:
         return None
- 
+
     if api_key is None:
         api_key = os.getenv("GOOGLE_API_KEY")
- 
+
     if not api_key:
         return None   # degrade gracefully rather than crash
- 
+
     return _geocode(text, api_key)
 
 
@@ -430,9 +430,9 @@ def _infer_destination(text: str, api_key: Optional[str] = None) -> Optional[str
 def chunk_transactions_csv(csv_path: str) -> list[TextChunk]:
     """
     Each row becomes one text chunk.
- 
+
     Columns: transaction_id, datetime, type, amount, payee,
-             description, category, address, source_bank
+            description, category, address, source_bank
     """
     import csv
     chunks: list[TextChunk] = []
@@ -448,10 +448,10 @@ def chunk_transactions_csv(csv_path: str) -> list[TextChunk]:
             category       = row.get("category", "").strip()
             address        = row.get("address", "").strip()
             source_bank    = row.get("source_bank", "").strip()
- 
+
             # ISO date only (drop time component if present)
             date_val = datetime_val.split("T")[0] if "T" in datetime_val else datetime_val.split(" ")[0]
- 
+
             # Natural-language sentence for embedding
             parts = []
             if datetime_val:
@@ -470,12 +470,12 @@ def chunk_transactions_csv(csv_path: str) -> list[TextChunk]:
                 parts.append(f"at {address}")
             if source_bank:
                 parts.append(f"[{source_bank}]")
- 
+
             text = " ".join(parts) if parts else str(row)
- 
+
             # Use transaction_id as doc_id if present, else generate one
             doc_id = f"txn_{transaction_id}" if transaction_id else _make_id("txn", idx)
- 
+
             chunks.append(TextChunk(
                 doc_id=doc_id,
                 text=text,
@@ -501,15 +501,15 @@ def chunk_transactions_csv(csv_path: str) -> list[TextChunk]:
 def chunk_maps_csv(csv_path: str) -> list[TextChunk]:
     """
     Each row (saved place / POI) becomes one text chunk.
- 
+
     Columns: original_title, note, original_url, place_api_id,
-             name, formatted_address, latitude, longitude, types,
-             rating, rating_count, phone, website, summary, opening_hours
+                name, formatted_address, latitude, longitude, types,
+                rating, rating_count, phone, website, summary, opening_hours
     """
     import csv
     # Derive a location tag from the CSV filename, e.g. "kyoto_places.csv" → "kyoto"
     location_tag = Path(csv_path).stem.lower()
- 
+
     chunks: list[TextChunk] = []
     with open(csv_path, newline="", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
@@ -527,9 +527,9 @@ def chunk_maps_csv(csv_path: str) -> list[TextChunk]:
             place_api_id     = row.get("place_api_id", "").strip()
             lat              = row.get("latitude", "").strip()
             lon              = row.get("longitude", "").strip()
- 
+
             display_name = name or original_title
- 
+
             # Build a rich prose description for embedding
             parts = []
             if display_name:
@@ -546,12 +546,12 @@ def chunk_maps_csv(csv_path: str) -> list[TextChunk]:
                 parts.append(f"Note: {note}")
             if opening_hours:
                 parts.append(f"Hours: {opening_hours}")
- 
+
             text = " ".join(parts) if parts else str(row)
- 
+
             # Prefer place_api_id as stable doc_id; fall back to generated
             doc_id = f"map_{place_api_id}" if place_api_id else _make_id(f"map_{location_tag}", idx)
- 
+
             chunks.append(TextChunk(
                 doc_id=doc_id,
                 text=text,
@@ -572,7 +572,7 @@ def chunk_maps_csv(csv_path: str) -> list[TextChunk]:
                 },
             ))
     return chunks
- 
+
 
 def chunk_photos(photos_dir: str, metadata_dir: str) -> tuple[list[TextChunk], list[ImageRecord]]:
     """

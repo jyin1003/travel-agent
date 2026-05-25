@@ -25,16 +25,16 @@ from langchain.tools import tool
 from src.retrieval.retriever import retrieve
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# In-process memory store (replace with Redis / SQLite for production)
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# In-process memory store
+# ---------------------------------------------------------------------------
 
 _MEMORY_STORE: dict = {}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 # Retrieval tools
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 
 @tool
 def search_text_tool(
@@ -54,12 +54,12 @@ def search_text_tool(
         k:            Number of results to return (default 5).
         destination:  Optional destination filter, e.g. "Tokyo".
         source_type:  Optional source type filter: "blog", "receipt",
-                      "itinerary", "map", "note".
+                        "itinerary", "map", "note".
     """
     where: Optional[dict] = None
     if destination and source_type:
         where = {"$and": [{"destination": {"$eq": destination}},
-                          {"source_type":  {"$eq": source_type}}]}
+                            {"source_type":  {"$eq": source_type}}]}
     elif destination:
         where = {"destination": destination}
     elif source_type:
@@ -108,7 +108,7 @@ def hybrid_search_tool(
         query:        Natural-language query.
         k:            Number of results to return (default 5).
         destination:  Optional destination filter applied to both text and
-                      image paths.
+                        image paths.
     """
     where: Optional[dict] = {"destination": destination} if destination else None
     results = retrieve(
@@ -121,9 +121,9 @@ def hybrid_search_tool(
     return _format_results(results)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 # Memory tool
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 
 @tool
 def memory_tool(action: str, key: Optional[str] = None, value: Optional[str] = None) -> str:
@@ -169,9 +169,9 @@ def memory_tool(action: str, key: Optional[str] = None, value: Optional[str] = N
     return f"Error: unknown action '{action}'. Use get_all / get / set / delete."
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 # Internal helpers
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 
 def _format_results(results: list[dict]) -> str:
     """Format retriever output as a readable string for LLM consumption."""
@@ -197,9 +197,9 @@ def _format_results(results: list[dict]) -> str:
     return "\n\n".join(lines)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 # Convenience exports
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 
 # All tools as a list — used by ToolNode and llm.bind_tools()
 ALL_TOOLS = [search_text_tool, search_images_tool, hybrid_search_tool, memory_tool]

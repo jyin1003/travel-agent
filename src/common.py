@@ -3,9 +3,6 @@ common.py
 
 Shared ChromaDB clients, model loaders, embedding helpers, and query
 functions used by both ingestion/indexer.py and retrieval/retriever.py.
-
-All heavy imports (torch, transformers, sentence_transformers) are deferred
-to the first time they are actually needed — importing this module is instant.
 """
 
 from __future__ import annotations

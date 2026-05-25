@@ -27,7 +27,7 @@ def _get_llm():
     )
 
 
-# ── S0: Plain LLM ────────────────────────────────────────────────────────────
+# ---- S0: Plain LLM -------------------------------------------------------------------------
 
 def run_s0(query: str) -> dict:
     """Plain LLM — no retrieval, no graph. Establishes the floor."""
@@ -46,7 +46,7 @@ def run_s0(query: str) -> dict:
     }
 
 
-# ── S1: Text-only RAG ────────────────────────────────────────────────────────
+# ---- S1: Text-only RAG -----------------------------------------------------------------
 
 _S1_SYSTEM = (
     "You are a travel assistant. Answer the question using ONLY the provided "
@@ -89,7 +89,7 @@ def run_s1(query: str) -> dict:
     }
 
 
-# ── S2: Text + image RAG ─────────────────────────────────────────────────────
+# ---- S2: Text + image RAG ------------------------------------------------------------
 
 _S2_SYSTEM = (
     "You are a travel assistant. Answer the question using ONLY the provided "
@@ -130,7 +130,7 @@ def run_s2(query: str) -> dict:
     }
 
 
-# ── S3: Agent, no memory ─────────────────────────────────────────────────────
+# ---- S3: Agent, no memory ------------------------------------------------------------
 
 def run_s3(query: str, session_memory: dict = None) -> dict:
     """
@@ -148,7 +148,7 @@ def run_s3(query: str, session_memory: dict = None) -> dict:
     return result
 
 
-# ── S4: Full system ──────────────────────────────────────────────────────────
+# ---- S4: Full system ---------------------------------------------------------------------
 
 def run_s4(query: str, session_memory: dict = None) -> dict:
     """Full system — multimodal indices, LangGraph agent with memory."""

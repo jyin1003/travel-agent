@@ -13,13 +13,7 @@ be automatically detected and passed to the agent as visual context.
 
 from __future__ import annotations
 
-import argparse
-import json
-import logging
-import shlex
-import warnings
-import sys
-import os
+import argparse, json, logging, shlex, warnings, sys, os
 
 
 # ---------------------------------------------------------------------------
@@ -179,7 +173,7 @@ Ask me anything about your travels — past trips, spending,
 photos, places you've saved, or where to go next.
 
 You can include image file paths in your message:
-  {DIM('e.g.  what restaurant is this? /photos/dinner.jpg')}
+{DIM('e.g.  what restaurant is this? /photos/dinner.jpg')}
 
 {DIM("Type 'exit' or 'quit' to leave.")}
 {DIM("Run with --profile for full debug output.")}
@@ -236,9 +230,9 @@ def main() -> None:
                 if k != "messages"
             }
             print(
-                YELLOW("\n── full agent state ──────────────────────────────────\n")
+                YELLOW("\n---- full agent state ------------------------------------------\n")
                 + json.dumps(state_dump, indent=2, default=str)
-                + YELLOW("\n──────────────────────────────────────────────────────\n"),
+                + YELLOW("\n-------------------------------------------------------------\n"),
                 file=sys.stderr,
             )
 

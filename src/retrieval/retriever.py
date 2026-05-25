@@ -61,9 +61,9 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 # City → Country expansion map
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 
 # Maps lowercase city/suburb names to their country.
 # Used to widen a city-level filter to a country-level search so that
@@ -150,9 +150,9 @@ def resolve_country(term: str) -> Optional[str]:
     return None
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 # BM25 corpus — built lazily from ChromaDB, cached as module-level singleton
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 
 _bm25_lock = threading.Lock()
 _bm25_index = None
@@ -224,9 +224,9 @@ def _reset_bm25_cache() -> None:
         _bm25_corpus = []
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 # BM25 query
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 
 def query_bm25(
     query: str,
@@ -286,9 +286,9 @@ def _metadata_matches(meta: dict, where: dict) -> bool:
     return True
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 # Fusion helpers
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 
 def _rrf_fuse(
     result_lists: list[tuple[list[dict], str]],
@@ -358,9 +358,9 @@ def _score_fuse(
     ]
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 # Single-path query functions
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 
 def query_text_dense(query: str, k: int = 10, where: Optional[dict] = None) -> list[dict]:
     """Dense text retrieval via sentence-transformer cosine similarity."""
@@ -385,9 +385,9 @@ def query_image_caption(query: str, k: int = 10, where: Optional[dict] = None) -
     return common.query_text_index(query, k=k, where=caption_filter)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 # Hybrid query functions
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 
 def text_hybrid_query(
     query: str,
@@ -478,9 +478,9 @@ def hybrid_query(
     )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 # Broad retrieval — wide fetch + post-filter by geographic terms
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 
 def _doc_matches_geo(doc: dict, terms: set[str]) -> bool:
     """
@@ -549,9 +549,9 @@ def build_geo_terms(filter_value: str) -> set[str]:
     return terms
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 # Public dispatcher
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 
 RetrievalMode = Literal[
     "text",
@@ -609,8 +609,8 @@ def retrieve(
     fusion      : "rrf" (default) or "score" (ablation)
     rrf_k       : RRF constant (default 60)
     auto_expand : if True and filtered results < _SPARSE_RESULT_THRESHOLD,
-                  automatically fall back to broad_retrieve() using geo terms
-                  inferred from the filter value
+                    automatically fall back to broad_retrieve() using geo terms
+                    inferred from the filter value
 
     Returns
     -------
@@ -650,7 +650,7 @@ def retrieve(
     else:
         raise ValueError(f"Unknown retrieval mode '{mode}'.")
 
-    # ── Auto-expand: broad fallback when filtered results are sparse ──────────
+    # ---- Auto-expand: broad fallback when filtered results are sparse --------------------
     if auto_expand and (text_where or image_where):
         if len(results) < _SPARSE_RESULT_THRESHOLD:
             # Extract the filter value to build geo terms
@@ -689,9 +689,9 @@ def retrieve(
     return results
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 # Smoke test
-# ─────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     import argparse

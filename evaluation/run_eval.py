@@ -29,12 +29,7 @@ automatically. On TPD (tokens-per-day) exhaustion the run is checkpointed and
 the process exits cleanly — restart tomorrow.
 """
 
-import csv
-import json
-import os
-import re
-import time
-import traceback
+import csv, json, os, re, time, traceback
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -46,7 +41,7 @@ from evaluation.metrics import compute_mrr, compute_recall_at_k, llm_judge
 
 RECALL_K = 5
 
-# ── Test queries ──────────────────────────────────────────────────────────────
+# ---- Test queries -----------------------------------------------------------------------------
 
 ALL_QUERIES = {
     "Q1":  "How much did I spend on transport in Japan?",
@@ -77,14 +72,14 @@ ALL_VARIANTS = {
     "S4": lambda q, mem: run_s4(q, mem),
 }
 
-# ── Paths ─────────────────────────────────────────────────────────────────────
+# ---- Paths --------------------------------------------------------------------------------------------
 
 _EVAL_DIR       = Path(__file__).parent
 _RESULTS_PATH   = _EVAL_DIR / "results.csv"
 _CHECKPOINT_PATH= _EVAL_DIR / "checkpoint.json"
 _GT_PATH        = _EVAL_DIR / "ground_truth.json"
 
-# ── CSV field names ───────────────────────────────────────────────────────────
+# ---- CSV field names ------------------------------------------------------------------------
 
 _FIELDNAMES = [
     "variant", "query_id", "family", "query", "answer",
@@ -93,7 +88,7 @@ _FIELDNAMES = [
     "judge_complete", "judge_mean",
 ]
 
-# ── Env-based subsetting ──────────────────────────────────────────────────────
+# ---- Env-based subsetting -------------------------------------------------------------
 
 def _selected_variants() -> dict:
     env = os.getenv("EVAL_VARIANTS", "")
@@ -111,7 +106,7 @@ def _selected_queries() -> dict:
     return {k: ALL_QUERIES[k] for k in keys if k in ALL_QUERIES}
 
 
-# ── Checkpoint helpers ────────────────────────────────────────────────────────
+# ---- Checkpoint helpers -----------------------------------------------------------------
 
 def _load_checkpoint() -> set[str]:
     """Return set of 'VARIANT|QID' keys that are already done."""
@@ -131,7 +126,7 @@ def _checkpoint_key(variant: str, qid: str) -> str:
     return f"{variant}|{qid}"
 
 
-# ── CSV helpers ───────────────────────────────────────────────────────────────
+# ---- CSV helpers --------------------------------------------------------------------------------
 
 def _ensure_csv_header() -> None:
     """Write the header row only if the file doesn't exist yet."""
@@ -148,7 +143,7 @@ def _append_row(row: dict) -> None:
         writer.writerow(row)
 
 
-# ── Rate-limit parsing ────────────────────────────────────────────────────────
+# ---- Rate-limit parsing -----------------------------------------------------------------
 
 def _parse_wait_seconds(error_str: str) -> float:
     """
@@ -173,7 +168,7 @@ def _is_tpd_error(error_str: str) -> bool:
     return "tokens per day" in error_str.lower() or "TPD" in error_str
 
 
-# ── Safe runner with 429 retry ────────────────────────────────────────────────
+# ---- Safe runner with 429 retry ------------------------------------------------─
 
 MAX_RETRIES = 5
 
@@ -227,7 +222,7 @@ def _safe_run(run_fn, query: str, session_memory: dict) -> dict:
     }
 
 
-# ── Load ground truth ─────────────────────────────────────────────────────────
+# ---- Load ground truth --------------------------------------------------------------------
 
 def _load_ground_truth() -> dict:
     if not _GT_PATH.exists():
@@ -237,7 +232,7 @@ def _load_ground_truth() -> dict:
         return json.load(f)
 
 
-# ── Main runner ───────────────────────────────────────────────────────────────
+# ---- Main runner --------------------------------------------------------------------------------
 
 def run_evaluation() -> list[dict]:
     ground_truth = _load_ground_truth()
@@ -303,14 +298,14 @@ def run_evaluation() -> list[dict]:
             if variant_name in ("S3", "S4"):
                 session_memory.update(result.get("memory", {}))
 
-            # ── MRR + Recall@k ────────────────────────────────────────────
+            # ---- MRR + Recall@k ----------------------------------------------------------------------------------------
             retrieved_ids = [d["id"] for d in result.get("retrieved_docs", [])]
             print(f"    [eval] retrieved {len(retrieved_ids)} docs with ids: {retrieved_ids}")
             ground_truth_ids = ground_truth.get(qid, {}).get("ground_truth_ids", [])
             mrr              = compute_mrr(retrieved_ids, ground_truth_ids)           if ground_truth_ids else None
             recall           = compute_recall_at_k(retrieved_ids, ground_truth_ids, k=RECALL_K) if ground_truth_ids else None
 
-            # ── LLM-as-judge ──────────────────────────────────────────────
+            # ---- LLM-as-judge --------------------------------------------------------------------------------------------
             context_preview = " ".join(
                 d.get("document", "")[:100]
                 for d in result.get("retrieved_docs", [])[:3]
@@ -320,7 +315,7 @@ def run_evaluation() -> list[dict]:
 
             answer = result.get("answer", "").replace("\n", " ")
             print(f"    MRR={mrr}  Recall@{RECALL_K}={recall}  "
-                  f"judge_mean={scores.get('mean')}  latency={wall_s}s")
+                    f"judge_mean={scores.get('mean')}  latency={wall_s}s")
 
             row = {
                 "variant":              variant_name,
@@ -339,7 +334,7 @@ def run_evaluation() -> list[dict]:
                 "judge_mean":           scores.get("mean", 0),
             }
 
-            # ── Write immediately ─────────────────────────────────────────
+            # ---- Write immediately ---------------------------------------------------------------------------------
             _append_row(row)
             rows.append(row)
 
@@ -349,7 +344,7 @@ def run_evaluation() -> list[dict]:
             # Small inter-query sleep to avoid hammering Groq RPM
             time.sleep(1.0)
 
-    # ── Final summary ─────────────────────────────────────────────────────────
+    # ---- Final summary --------------------------------------------------------------------
     print(f"\n{'='*60}")
     print(f"Results written to: {_RESULTS_PATH}")
     if rows:
@@ -363,7 +358,7 @@ def run_evaluation() -> list[dict]:
     return rows
 
 
-# ── Summary printer ───────────────────────────────────────────────────────────
+# ---- Summary printer ------------------------------------------------------------------------
 
 def _print_summary(rows: list[dict]) -> None:
     from collections import defaultdict
@@ -387,7 +382,7 @@ def _print_summary(rows: list[dict]) -> None:
         avg_tools   = round(sum(tool_counts) / len(tool_counts), 1) if tool_counts else "N/A"
 
         print(f"{variant:<10} {str(avg_judge):>10} {str(avg_mrr):>8} "
-              f"{str(avg_latency):>12} {str(avg_tools):>12}")
+                f"{str(avg_latency):>12} {str(avg_tools):>12}")
 
 
 if __name__ == "__main__":

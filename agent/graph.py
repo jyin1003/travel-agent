@@ -15,7 +15,7 @@ Graph topology:
        |
     analyser
        |  conditional on intent
-  ┌────┴────────┐
+  ┌--------┴----------------┐
   direct     creative
   responder  responder
 
@@ -198,7 +198,7 @@ def run_query(query: str, session_memory: dict | None = None, image_paths: list[
 
 
 # ---------------------------------------------------------------------------
-# REPL
+# CLI
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":

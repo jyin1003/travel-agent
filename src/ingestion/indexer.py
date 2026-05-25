@@ -19,8 +19,7 @@ the metadata pre-filtering trap mentioned in the reference slides.
 
 from __future__ import annotations
 
-import sys
-import time
+import sys, time
 from datetime import datetime
 
 from .chunker import TextChunk, ImageRecord, build_all_chunks
@@ -54,7 +53,6 @@ def _safe_metadata(d: dict) -> dict:
 
 
 # Indexing: text_index
-
 def index_text_chunks(chunks: list[TextChunk], reset: bool = False) -> None:
     """
     Embed all TextChunk objects and upsert into text_index.
@@ -152,7 +150,6 @@ def index_images(records: list[ImageRecord], reset: bool = False) -> None:
 
 
 # Entrypoint — build and persist both indices
-
 if __name__ == "__main__":
     if len(sys.argv) < 5:
         print("Usage: python indexer.py <transactions.csv> <maps_dir/> <photos_dir/> <metadata_dir/>")

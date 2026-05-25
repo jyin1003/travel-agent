@@ -31,7 +31,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# ── Config ────────────────────────────────────────────────────────────────────
+# ---- Config -----------------------------------------------------------------------------------------
 
 _JUDGE_MODEL   = os.getenv("EVAL_JUDGE_MODEL", "mistral")
 _OLLAMA_URL    = os.getenv("OLLAMA_URL", "http://localhost:11434")
@@ -39,7 +39,7 @@ _JUDGE_MAX_TOK = int(os.getenv("EVAL_JUDGE_MAX_TOKENS", "512"))
 _JUDGE_SLEEP_S = float(os.getenv("EVAL_JUDGE_SLEEP", "0.5"))  # no rate limit locally
 
 
-# ── Retrieval metrics ─────────────────────────────────────────────────────────
+# ---- Retrieval metrics --------------------------------------------------------------------
 
 def compute_mrr(retrieved_ids: list[str], ground_truth_ids: list[str]) -> float:
     """
@@ -82,7 +82,7 @@ def compute_recall_at_k(
     return round(len(hits) / len(gold_set), 4)
 
 
-# ── LLM-as-judge ─────────────────────────────────────────────────────────────
+# ---- LLM-as-judge ----------------------------------------------------------------------------
 
 _JUDGE_SYSTEM = (
     "You are an evaluation judge. Score the answer on four dimensions, "
